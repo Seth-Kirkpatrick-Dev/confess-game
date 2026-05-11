@@ -27,7 +27,8 @@ export function Signup() {
       }
       setDone(true);
     } catch (err) {
-      setError(err.message || 'Sign up failed');
+      console.error('[Signup] Full error:', err);
+      setError(err.message || String(err) || 'Sign up failed');
     } finally {
       setLoading(false);
     }
