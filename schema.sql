@@ -46,15 +46,22 @@ ALTER TABLE confessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE votes ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: anyone can view, only owner can update
+DROP POLICY IF EXISTS "profiles_select" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert" ON profiles;
+DROP POLICY IF EXISTS "profiles_update" ON profiles;
 CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (true);
 CREATE POLICY "profiles_insert" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "profiles_update" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Confessions: anyone can view non-deleted, auth users can insert
+DROP POLICY IF EXISTS "confessions_select" ON confessions;
+DROP POLICY IF EXISTS "confessions_insert" ON confessions;
 CREATE POLICY "confessions_select" ON confessions FOR SELECT USING (is_deleted = false);
 CREATE POLICY "confessions_insert" ON confessions FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Votes: anyone can view, auth users can insert own votes
+DROP POLICY IF EXISTS "votes_select" ON votes;
+DROP POLICY IF EXISTS "votes_insert" ON votes;
 CREATE POLICY "votes_select" ON votes FOR SELECT USING (true);
 CREATE POLICY "votes_insert" ON votes FOR INSERT WITH CHECK (auth.uid() = user_id);
 
@@ -68,9 +75,12 @@ BEGIN
   VALUES (
     NEW.id,
     NEW.email,
-    SPLIT_PART(NEW.email, '@', 1) || '_' || SUBSTRING(REPLACE(NEW.id::TEXT, '-', ''), 1, 6)
+    COALESCE(NULLIF(SPLIT_PART(NEW.email, '@', 1), ''), 'user') || '_' || SUBSTRING(REPLACE(NEW.id::TEXT, '-', ''), 1, 6)
   )
   ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING 'handle_new_user failed: %', SQLERRM;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
