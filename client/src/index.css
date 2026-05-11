@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: #0f0f0f;
+    color: #f0f0f0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0f0f0f;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-violet-600 hover:bg-violet-700 text-white;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-white/10 text-textSecondary hover:text-textPrimary border border-border;
+  }
+
+  .card {
+    @apply bg-surface rounded-xl border border-border p-5 animate-slide-up;
+  }
+
+  .input {
+    @apply w-full bg-surfaceHover border border-border rounded-lg px-4 py-2.5 text-textPrimary placeholder-textSecondary text-sm outline-none focus:border-violet-500 transition-colors;
+  }
+
+  .vote-btn {
+    @apply flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all duration-150 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+}
