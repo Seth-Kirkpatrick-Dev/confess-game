@@ -2,17 +2,13 @@
 .env
 .env.local
 .env.*.local
-client/.env
-client/.env.local
 
 # Dependencies
 node_modules/
-client/node_modules/
-api/node_modules/
 
 # Build output
-client/dist/
-client/build/
+.next/
+out/
 
 # Logs
 *.log
@@ -31,3 +27,9 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+.vercel
+.env*.local
+
+# Claude Code local settings (may contain secrets)
+.claude/settings.local.json
