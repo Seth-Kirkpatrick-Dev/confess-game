@@ -9,7 +9,7 @@ import { AdPlaceholder } from '@/components/AdPlaceholder';
 import { useToast } from '@/components/Toast';
 
 export default function HomePage() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const { showToast, ToastContainer } = useToast();
 
   const [confessions, setConfessions] = useState([]);
@@ -33,7 +33,7 @@ export default function HomePage() {
     }
   }, [user?.id]);
 
-  useEffect(() => { fetchFeed(page); }, [page, fetchFeed]);
+  useEffect(() => { if (!authLoading) fetchFeed(page); }, [page, fetchFeed, authLoading]);
 
   const handlePost = async (e) => {
     e.preventDefault();
