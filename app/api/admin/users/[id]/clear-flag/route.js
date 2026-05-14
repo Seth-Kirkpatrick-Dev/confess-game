@@ -2,27 +2,27 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { checkAdmin } from '@/lib/api-helpers';
 
-export async function DELETE(request, { params }) {
+export async function POST(request, { params }) {
   const adminError = checkAdmin(request);
   if (adminError) return adminError;
 
   try {
-    const { error } = await supabaseServer
-      .from('confessions')
-      .update({ is_deleted: true })
-      .eq('id', params.id);
-    if (error) throw error;
+    const { id } = params;
 
-    // Dismiss any pending reports so they don't linger in the queue
+    await supabaseServer
+      .from('profiles')
+      .update({ is_flagged_pending_review: false })
+      .eq('id', id);
+
     await supabaseServer
       .from('reports')
-      .update({ status: 'actioned' })
-      .eq('confession_id', params.id)
+      .update({ status: 'dismissed' })
+      .eq('reported_user_id', id)
       .eq('status', 'pending');
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('DELETE /api/admin/confessions/:id:', err.message);
+    console.error('POST /api/admin/users/[id]/clear-flag:', err.message);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

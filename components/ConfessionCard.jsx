@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { voteOnConfession, deleteConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { TierBadge } from '@/components/TierBadge';
+import { ReportModal } from '@/components/ReportModal';
 
 function formatTime(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000;
@@ -15,9 +16,10 @@ function formatTime(ts) {
 }
 
 export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [localData, setLocalData] = useState(null);
 
   const data = localData || confession;
@@ -82,6 +84,15 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
   };
 
   return (
+    <>
+    {reportOpen && (
+      <ReportModal
+        confessionId={confession.id}
+        resolvedVotes={profile?.total_resolved_votes}
+        onClose={() => setReportOpen(false)}
+        showToast={showToast}
+      />
+    )}
     <div className="card relative overflow-hidden hover:border-border/80 transition-colors">
       {/* Daily prompt badge */}
       {data.prompt_category && (
@@ -191,6 +202,15 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
               </button>
             )
           )}
+          {user && !isAuthor && (
+            <button
+              onClick={() => setReportOpen(true)}
+              className="text-textSecondary/50 hover:text-red-400/70 text-xs px-2 py-1 rounded hover:bg-red-500/5 transition-colors"
+              title="Report"
+            >
+              🚩
+            </button>
+          )}
           <button
             onClick={handleShare}
             className="text-textSecondary hover:text-textPrimary text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors"
@@ -201,5 +221,6 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
         </div>
       </div>
     </div>
+    </>
   );
 }

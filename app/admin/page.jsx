@@ -7,6 +7,9 @@ import {
   adminGetUsers,
   adminBanUser,
   adminUnbanUser,
+  adminGetReports,
+  adminRestoreConfession,
+  adminClearUserFlag,
 } from '@/lib/api';
 
 function formatDate(ts) {
@@ -21,6 +24,9 @@ export default function AdminPage() {
   const [tab, setTab] = useState('confessions');
   const [confessions, setConfessions] = useState([]);
   const [users, setUsers] = useState([]);
+  const [reports, setReports] = useState({ confessions: [], users: [] });
+  const [reportsSubTab, setReportsSubTab] = useState('confessions');
+  const [expandedReport, setExpandedReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
 
@@ -66,10 +72,23 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  const loadReports = async () => {
+    setLoading(true);
+    try {
+      const [cData, uData] = await Promise.all([
+        adminGetReports(password, 'confessions'),
+        adminGetReports(password, 'users'),
+      ]);
+      setReports({ confessions: cData.confessions || [], users: uData.users || [] });
+    } catch { }
+    setLoading(false);
+  };
+
   const handleTabChange = (t) => {
     setTab(t);
     if (t === 'confessions') loadConfessions();
     if (t === 'users') loadUsers();
+    if (t === 'reports') loadReports();
   };
 
   const handleDelete = async (id) => {
@@ -96,6 +115,45 @@ export default function AdminPage() {
     } catch {
       flash('Action failed');
     }
+  };
+
+  const handleRestore = async (confessionId) => {
+    try {
+      await adminRestoreConfession(password, confessionId);
+      flash('Confession restored');
+      setExpandedReport(null);
+      loadReports();
+    } catch { flash('Action failed'); }
+  };
+
+  const handleDeleteFromQueue = async (confessionId) => {
+    if (!confirm('Delete this confession?')) return;
+    try {
+      await adminDeleteConfession(password, confessionId);
+      flash('Confession deleted');
+      setExpandedReport(null);
+      loadReports();
+    } catch { flash('Action failed'); }
+  };
+
+  const handleBanFromQueue = async (userId, confessionId) => {
+    if (!confirm('Ban this user and delete their confession?')) return;
+    try {
+      await adminBanUser(password, userId);
+      if (confessionId) await adminDeleteConfession(password, confessionId);
+      flash('User banned');
+      setExpandedReport(null);
+      loadReports();
+    } catch { flash('Action failed'); }
+  };
+
+  const handleClearUserFlag = async (userId) => {
+    try {
+      await adminClearUserFlag(password, userId);
+      flash('Flag cleared');
+      setExpandedReport(null);
+      loadReports();
+    } catch { flash('Action failed'); }
   };
 
   if (!authed) {
@@ -143,7 +201,7 @@ export default function AdminPage() {
         )}
       </div>
 
-      <div className="flex gap-2 border-b border-border pb-3">
+      <div className="flex gap-2 border-b border-border pb-3 flex-wrap">
         <button
           onClick={() => handleTabChange('confessions')}
           className={`text-sm px-4 py-2 rounded-lg transition-colors ${tab === 'confessions' ? 'bg-violet-600 text-white' : 'text-textSecondary hover:text-textPrimary hover:bg-white/5'}`}
@@ -155,6 +213,12 @@ export default function AdminPage() {
           className={`text-sm px-4 py-2 rounded-lg transition-colors ${tab === 'users' ? 'bg-violet-600 text-white' : 'text-textSecondary hover:text-textPrimary hover:bg-white/5'}`}
         >
           Users ({users.length})
+        </button>
+        <button
+          onClick={() => handleTabChange('reports')}
+          className={`text-sm px-4 py-2 rounded-lg transition-colors ${tab === 'reports' ? 'bg-red-600 text-white' : 'text-textSecondary hover:text-textPrimary hover:bg-white/5'}`}
+        >
+          🚩 Reports ({reports.confessions.length + reports.users.length})
         </button>
       </div>
 
@@ -224,6 +288,130 @@ export default function AdminPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {tab === 'reports' && !loading && (
+        <div className="space-y-4">
+          {/* Sub-tabs */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setReportsSubTab('confessions')}
+              className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${reportsSubTab === 'confessions' ? 'bg-surface border border-border text-textPrimary' : 'text-textSecondary hover:text-textPrimary'}`}
+            >
+              Flagged Confessions ({reports.confessions.length})
+            </button>
+            <button
+              onClick={() => setReportsSubTab('users')}
+              className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${reportsSubTab === 'users' ? 'bg-surface border border-border text-textPrimary' : 'text-textSecondary hover:text-textPrimary'}`}
+            >
+              Flagged Users ({reports.users.length})
+            </button>
+          </div>
+
+          {reportsSubTab === 'confessions' && (
+            <div className="space-y-3">
+              {reports.confessions.length === 0 && (
+                <p className="text-textSecondary text-sm text-center py-8">No flagged confessions 🎉</p>
+              )}
+              {reports.confessions.map(c => (
+                <div key={c.id} className="card border-red-500/20 space-y-3">
+                  <div className="flex justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-textPrimary">"{c.content}"</p>
+                      <p className="text-textSecondary text-xs mt-1">
+                        @{c.profiles?.username} · {formatDate(c.created_at)}
+                        · {c.reports.length} report{c.reports.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setExpandedReport(expandedReport === c.id ? null : c.id)}
+                      className="flex-shrink-0 text-xs text-textSecondary hover:text-textPrimary px-2 py-1 rounded hover:bg-white/5"
+                    >
+                      {expandedReport === c.id ? '▲' : '▼'} Details
+                    </button>
+                  </div>
+
+                  {expandedReport === c.id && (
+                    <div className="space-y-3 border-t border-border pt-3">
+                      <div className="space-y-2">
+                        {c.reports.map(r => (
+                          <div key={r.id} className="p-2.5 rounded-lg bg-surfaceHover text-xs space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-red-400 font-medium capitalize">{r.reason}</span>
+                              <span className="text-textSecondary">· @{r.profiles?.username} · {formatDate(r.created_at)}</span>
+                            </div>
+                            {r.notes && <p className="text-textSecondary italic">"{r.notes}"</p>}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <button onClick={() => handleRestore(c.id)} className="text-xs px-3 py-1.5 rounded-lg border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-colors">
+                          ✓ Restore
+                        </button>
+                        <button onClick={() => handleDeleteFromQueue(c.id)} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">
+                          🗑 Delete
+                        </button>
+                        <button onClick={() => handleBanFromQueue(c.user_id, c.id)} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                          🚫 Ban Poster + Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {reportsSubTab === 'users' && (
+            <div className="space-y-3">
+              {reports.users.length === 0 && (
+                <p className="text-textSecondary text-sm text-center py-8">No flagged users 🎉</p>
+              )}
+              {reports.users.map(u => (
+                <div key={u.id} className="card border-orange-500/20 space-y-3">
+                  <div className="flex justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-textPrimary">@{u.username}</p>
+                      <p className="text-textSecondary text-xs mt-0.5">
+                        {u.email} · {u.reports.length} report{u.reports.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setExpandedReport(expandedReport === u.id ? null : u.id)}
+                      className="flex-shrink-0 text-xs text-textSecondary hover:text-textPrimary px-2 py-1 rounded hover:bg-white/5"
+                    >
+                      {expandedReport === u.id ? '▲' : '▼'} Details
+                    </button>
+                  </div>
+
+                  {expandedReport === u.id && (
+                    <div className="space-y-3 border-t border-border pt-3">
+                      <div className="space-y-2">
+                        {u.reports.map(r => (
+                          <div key={r.id} className="p-2.5 rounded-lg bg-surfaceHover text-xs space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-orange-400 font-medium capitalize">{r.reason}</span>
+                              <span className="text-textSecondary">· @{r.profiles?.username} · {formatDate(r.created_at)}</span>
+                            </div>
+                            {r.notes && <p className="text-textSecondary italic">"{r.notes}"</p>}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleClearUserFlag(u.id)} className="text-xs px-3 py-1.5 rounded-lg border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-colors">
+                          ✓ Clear Flag
+                        </button>
+                        <button onClick={() => handleBanFromQueue(u.id, null)} className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">
+                          🚫 Ban User
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

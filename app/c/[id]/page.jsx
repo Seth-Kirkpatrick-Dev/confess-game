@@ -7,6 +7,7 @@ import { getConfession, voteOnConfession, deleteConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
 import { TierBadge } from '@/components/TierBadge';
+import { ReportModal } from '@/components/ReportModal';
 
 function formatDate(ts) {
   return new Date(ts).toLocaleDateString('en-US', {
@@ -17,7 +18,8 @@ function formatDate(ts) {
 export default function ConfessionPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const [reportOpen, setReportOpen] = useState(false);
   const { showToast, ToastContainer } = useToast();
 
   const [confession, setConfession] = useState(null);
@@ -131,6 +133,15 @@ export default function ConfessionPage() {
     : new Date(new Date(c.created_at).getTime() + 48 * 60 * 60 * 1000);
 
   return (
+    <>
+    {reportOpen && (
+      <ReportModal
+        confessionId={id}
+        resolvedVotes={profile?.total_resolved_votes}
+        onClose={() => setReportOpen(false)}
+        showToast={showToast}
+      />
+    )}
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       <ToastContainer />
 
@@ -266,8 +277,18 @@ export default function ConfessionPage() {
               </button>
             )
           )}
+          {user && !isAuthor && (
+            <button
+              onClick={() => setReportOpen(true)}
+              className="py-2 px-3 rounded-lg text-sm border border-border text-textSecondary/50 hover:text-red-400/70 hover:border-red-500/20 hover:bg-red-500/5 transition-colors"
+              title="Report this confession"
+            >
+              🚩 Report
+            </button>
+          )}
         </div>
       </div>
     </div>
+    </>
   );
 }
