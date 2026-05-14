@@ -7,6 +7,7 @@ import { getConfession, voteOnConfession, deleteConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
 import { TierBadge } from '@/components/TierBadge';
+import { Avatar } from '@/components/Avatar';
 import { ReportModal } from '@/components/ReportModal';
 import { ReactionBar } from '@/components/ReactionBar';
 
@@ -163,9 +164,13 @@ export default function ConfessionPage() {
 
         {/* Author + meta */}
         <div className="flex items-center gap-2 text-xs text-textSecondary flex-wrap">
+          <Avatar username={c.profiles?.username} config={c.profiles?.avatar_config} size={20} />
           <Link href={`/u/${c.profiles?.username}`} className="hover:text-textPrimary transition-colors">
             @{c.profiles?.username || 'anonymous'}
           </Link>
+          {c.profiles?.featured_badge_icon && (
+            <span className="text-xs" title="Featured badge">{c.profiles.featured_badge_icon}</span>
+          )}
           <TierBadge tier={c.profiles?.tier} showLabel />
           <span>·</span>
           <span>{formatDate(c.created_at)}</span>
