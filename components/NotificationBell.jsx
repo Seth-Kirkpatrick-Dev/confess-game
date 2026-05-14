@@ -83,28 +83,41 @@ export function NotificationBell() {
             {!loading && notifications.length === 0 && (
               <p className="text-textSecondary text-sm text-center py-6">No notifications yet</p>
             )}
-            {notifications.map(n => (
-              <Link
-                key={n.id}
-                href={`/c/${n.confession_id}`}
-                onClick={() => setOpen(false)}
-                className={`block px-4 py-3 border-b border-border hover:bg-surfaceHover transition-colors ${!n.is_read ? 'bg-violet-500/5' : ''}`}
-              >
-                <p className="text-xs text-textSecondary mb-1">{timeAgo(n.created_at)}</p>
-                <p className="text-sm text-textPrimary line-clamp-2 mb-1.5">
-                  "{n.confessions?.content}"
-                </p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-textSecondary">
-                    You voted <span className="font-medium text-textPrimary capitalize">{n.your_vote}</span>
-                    {' · '}Truth: <span className={`font-medium capitalize ${n.truth === 'real' ? 'text-green-400' : 'text-red-400'}`}>{n.truth}</span>
-                  </span>
-                  <span className={`text-xs font-bold ml-auto ${n.is_correct ? 'text-green-400' : 'text-red-400'}`}>
-                    {n.points_awarded > 0 ? `+${n.points_awarded}` : n.points_awarded} pts
-                  </span>
-                </div>
-              </Link>
-            ))}
+            {notifications.map(n => {
+              if (n.type === 'achievement') {
+                return (
+                  <div
+                    key={n.id}
+                    className={`px-4 py-3 border-b border-border ${!n.is_read ? 'bg-yellow-500/5' : ''}`}
+                  >
+                    <p className="text-xs text-textSecondary mb-1">{timeAgo(n.created_at)}</p>
+                    <p className="text-sm text-textPrimary font-medium">{n.message}</p>
+                  </div>
+                );
+              }
+              return (
+                <Link
+                  key={n.id}
+                  href={`/c/${n.confession_id}`}
+                  onClick={() => setOpen(false)}
+                  className={`block px-4 py-3 border-b border-border hover:bg-surfaceHover transition-colors ${!n.is_read ? 'bg-violet-500/5' : ''}`}
+                >
+                  <p className="text-xs text-textSecondary mb-1">{timeAgo(n.created_at)}</p>
+                  <p className="text-sm text-textPrimary line-clamp-2 mb-1.5">
+                    "{n.confessions?.content}"
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-textSecondary">
+                      You voted <span className="font-medium text-textPrimary capitalize">{n.your_vote}</span>
+                      {' · '}Truth: <span className={`font-medium capitalize ${n.truth === 'real' ? 'text-green-400' : 'text-red-400'}`}>{n.truth}</span>
+                    </span>
+                    <span className={`text-xs font-bold ml-auto ${n.is_correct ? 'text-green-400' : 'text-red-400'}`}>
+                      {n.points_awarded > 0 ? `+${n.points_awarded}` : n.points_awarded} pts
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
