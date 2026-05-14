@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
 import { TierBadge } from '@/components/TierBadge';
 import { ReportModal } from '@/components/ReportModal';
+import { ReactionBar } from '@/components/ReactionBar';
 
 function formatDate(ts) {
   return new Date(ts).toLocaleDateString('en-US', {
@@ -244,6 +245,15 @@ export default function ConfessionPage() {
             </div>
           </div>
         )}
+
+        {/* Reactions */}
+        <ReactionBar
+          confessionId={c.id}
+          reactions={c.reactions}
+          userReactions={c.userReactions}
+          user={user}
+          showToast={showToast}
+        />
 
         {/* Share + author actions */}
         <div className="flex gap-2 pt-1 flex-wrap">

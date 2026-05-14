@@ -6,6 +6,7 @@ import { voteOnConfession, deleteConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { TierBadge } from '@/components/TierBadge';
 import { ReportModal } from '@/components/ReportModal';
+import { ReactionBar } from '@/components/ReactionBar';
 
 function formatTime(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000;
@@ -162,6 +163,17 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
           </div>
         </div>
       ) : null}
+
+      {/* Reactions */}
+      <div className="mt-3">
+        <ReactionBar
+          confessionId={data.id}
+          reactions={data.reactions}
+          userReactions={data.userReactions}
+          user={user}
+          showToast={showToast}
+        />
+      </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">

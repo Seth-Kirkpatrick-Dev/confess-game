@@ -21,15 +21,39 @@ export async function GET(request) {
 
     if (error) throw error;
 
-    let userVotes = {};
-    if (userId && data.length) {
-      const { data: votes } = await supabaseServer
-        .from('votes')
-        .select('confession_id, vote_type')
-        .eq('user_id', userId)
-        .in('confession_id', data.map(c => c.id));
-      if (votes) {
-        userVotes = votes.reduce((acc, v) => ({ ...acc, [v.confession_id]: v.vote_type }), {});
+    const confessionIds = data.map(c => c.id);
+
+    // Parallel: user votes + all reactions for this page (single batch each)
+    const [votesResult, reactionsResult] = await Promise.all([
+      userId && confessionIds.length
+        ? supabaseServer
+            .from('votes')
+            .select('confession_id, vote_type')
+            .eq('user_id', userId)
+            .in('confession_id', confessionIds)
+        : Promise.resolve({ data: [] }),
+      confessionIds.length
+        ? supabaseServer
+            .from('reactions')
+            .select('confession_id, emoji, user_id')
+            .in('confession_id', confessionIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const userVotes = (votesResult.data || []).reduce(
+      (acc, v) => ({ ...acc, [v.confession_id]: v.vote_type }),
+      {}
+    );
+
+    // Group reactions: counts per confession+emoji, and current user's reactions
+    const reactionCounts = {};
+    const userReactionSet = {};
+    for (const r of (reactionsResult.data || [])) {
+      if (!reactionCounts[r.confession_id]) reactionCounts[r.confession_id] = {};
+      reactionCounts[r.confession_id][r.emoji] = (reactionCounts[r.confession_id][r.emoji] || 0) + 1;
+      if (userId && r.user_id === userId) {
+        if (!userReactionSet[r.confession_id]) userReactionSet[r.confession_id] = [];
+        userReactionSet[r.confession_id].push(r.emoji);
       }
     }
 
@@ -40,11 +64,11 @@ export async function GET(request) {
         return {
           ...c,
           userVote,
-          // Hide split until user votes or confession resolves (anti-cheat)
           real_votes: canSeeVotes ? c.real_votes : null,
           fake_votes: canSeeVotes ? c.fake_votes : null,
-          // Never expose poster's truth until resolved
           is_true: c.is_resolved ? c.is_true : undefined,
+          reactions: reactionCounts[c.id] || {},
+          userReactions: userReactionSet[c.id] || [],
         };
       }),
       total: count,

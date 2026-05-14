@@ -25,24 +25,36 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Confession not found' }, { status: 404 });
     }
 
-    let userVote = null;
-    if (userId) {
-      const { data: vote } = await supabaseServer
-        .from('votes')
-        .select('vote_type')
-        .eq('user_id', userId)
-        .eq('confession_id', id)
-        .maybeSingle();
-      if (vote) userVote = vote.vote_type;
-    }
-
-    const canSeeVotes = confession.is_resolved || userVote !== null;
-
-    // Return limited payload for confessions under review
     if (confession.is_hidden_pending_review) {
       return NextResponse.json({
         confession: { id: confession.id, is_hidden_pending_review: true },
       });
+    }
+
+    // Parallel: user's vote + all reactions for this confession
+    const [voteResult, reactionsResult] = await Promise.all([
+      userId
+        ? supabaseServer
+            .from('votes')
+            .select('vote_type')
+            .eq('user_id', userId)
+            .eq('confession_id', id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabaseServer
+        .from('reactions')
+        .select('emoji, user_id')
+        .eq('confession_id', id),
+    ]);
+
+    const userVote = voteResult.data?.vote_type || null;
+    const canSeeVotes = confession.is_resolved || userVote !== null;
+
+    const reactionCounts = {};
+    const userReactions = [];
+    for (const r of (reactionsResult.data || [])) {
+      reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
+      if (userId && r.user_id === userId) userReactions.push(r.emoji);
     }
 
     return NextResponse.json({
@@ -52,6 +64,8 @@ export async function GET(request, { params }) {
         real_votes: canSeeVotes ? confession.real_votes : null,
         fake_votes: canSeeVotes ? confession.fake_votes : null,
         is_true: confession.is_resolved ? confession.is_true : undefined,
+        reactions: reactionCounts,
+        userReactions,
       },
     });
   } catch (err) {
