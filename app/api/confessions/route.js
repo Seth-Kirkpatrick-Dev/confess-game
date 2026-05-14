@@ -7,7 +7,7 @@ export async function GET(request) {
   try {
     const { searchParams } = request.nextUrl;
     const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 10;
+    const limit = parseInt(searchParams.get('limit')) || 20;
     const userId = searchParams.get('userId');
     const offset = (page - 1) * limit;
 
@@ -15,6 +15,7 @@ export async function GET(request) {
       .from('confessions')
       .select('*, profiles(username, tier)', { count: 'exact' })
       .eq('is_deleted', false)
+      .eq('is_hidden_pending_review', false)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
