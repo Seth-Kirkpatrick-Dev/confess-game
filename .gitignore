@@ -34,4 +34,7 @@ Thumbs.db
 # Claude Code local settings (may contain secrets)
 .claude/settings.local.json
 
+# Local scripts (seed data, one-offs)
+scripts/
+
 .env*.local
