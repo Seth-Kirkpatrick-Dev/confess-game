@@ -318,9 +318,19 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {profile.recent_votes?.length > 0 && (
-            <div className="card">
-              <p className="text-xs text-textSecondary uppercase tracking-wider mb-3 font-semibold">Recent Resolved Votes</p>
+          <div className="card">
+            <p className="text-xs text-textSecondary uppercase tracking-wider mb-3 font-semibold">Recent Resolved Votes</p>
+            {(profile.recent_votes?.length || 0) === 0 ? (
+              <div className="text-center py-6 space-y-2">
+                <p className="text-textSecondary text-sm">No activity yet.</p>
+                <p className="text-textSecondary text-xs">Cast a vote or post a confession to start building your history.</p>
+                {isOwnProfile && (
+                  <Link href="/" className="inline-block mt-1 text-xs text-violet-400 hover:underline">
+                    Go to the feed →
+                  </Link>
+                )}
+              </div>
+            ) : (
               <div className="space-y-2">
                 {profile.recent_votes.map((v, i) => (
                   <Link key={i} href={`/c/${v.confessions?.id}`} className="block p-3 rounded-lg bg-surfaceHover hover:bg-surface transition-colors">
@@ -337,6 +347,17 @@ export default function ProfilePage() {
                   </Link>
                 ))}
               </div>
+            )}
+          </div>
+
+          {isOwnProfile && profile.total_confessions === 0 && (
+            <div className="card text-center py-8 space-y-2">
+              <p className="text-3xl">🤫</p>
+              <p className="text-textPrimary font-medium">You haven't posted any confessions yet</p>
+              <p className="text-textSecondary text-sm">Got a secret? Post your first confession and see if the community can tell if it's real or fake.</p>
+              <Link href="/" className="inline-block mt-2 text-sm text-violet-400 hover:underline">
+                Post your first confession →
+              </Link>
             </div>
           )}
         </>
@@ -345,6 +366,18 @@ export default function ProfilePage() {
       {/* Achievements tab */}
       {tab === 'achievements' && (
         <div className="space-y-6">
+          {unlockedCount === 0 && (
+            <div className="card text-center py-8 space-y-2">
+              <p className="text-3xl">🏅</p>
+              <p className="text-textPrimary font-medium">No achievements unlocked yet</p>
+              <p className="text-textSecondary text-sm">Vote on confessions and post your own to start earning badges.</p>
+              {isOwnProfile && (
+                <Link href="/" className="inline-block mt-1 text-xs text-violet-400 hover:underline">
+                  Vote or post to unlock your first achievement →
+                </Link>
+              )}
+            </div>
+          )}
           {achievementsByCategory.map(({ cat, items }) => (
             <div key={cat}>
               <p className="text-xs text-textSecondary uppercase tracking-wider font-semibold mb-3">

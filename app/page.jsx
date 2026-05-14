@@ -205,8 +205,10 @@ export default function HomePage() {
             ))}
           </div>
         ) : confessions.length === 0 ? (
-          <div className="card text-center py-12 text-textSecondary">
-            No confessions yet. Be the first to post! 🤫
+          <div className="card text-center py-12 space-y-3">
+            <p className="text-4xl">🤫</p>
+            <p className="text-textPrimary font-semibold">No confessions in the feed yet</p>
+            <p className="text-textSecondary text-sm">Be the first — post something true (or not) and let the community decide.</p>
           </div>
         ) : (
           confessions.map(c => (

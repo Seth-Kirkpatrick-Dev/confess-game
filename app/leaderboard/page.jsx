@@ -35,14 +35,16 @@ function LeaderRow({ profile, i, pointsKey, label }) {
   );
 }
 
-function LeaderTable({ title, emoji, rows, pointsKey, label }) {
+function LeaderTable({ title, emoji, rows, pointsKey, label, emptyMessage }) {
   return (
     <div className="card">
       <h2 className="text-sm font-semibold text-textSecondary uppercase tracking-wider mb-4">
         {emoji} {title}
       </h2>
       {rows.length === 0 ? (
-        <p className="text-textSecondary text-sm text-center py-4">No data yet</p>
+        <div className="text-center py-6 space-y-1.5">
+          <p className="text-textSecondary text-sm">{emptyMessage || 'No data yet'}</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {rows.map((row, i) => (
@@ -121,13 +123,19 @@ export default function LeaderboardPage() {
 
     if (tab === 'This Week' && weekly !== null) {
       return (
-        <LeaderTable title="This Week's Leaders" emoji="📅" rows={weekly} pointsKey="points" label="pts" />
+        <LeaderTable
+          title="This Week's Leaders" emoji="📅" rows={weekly} pointsKey="points" label="pts"
+          emptyMessage="This week's leaderboard resets every Sunday. Vote and post to climb."
+        />
       );
     }
 
     if (tab === 'This Month' && monthly !== null) {
       return (
-        <LeaderTable title="This Month's Leaders" emoji="📆" rows={monthly} pointsKey="points" label="pts" />
+        <LeaderTable
+          title="This Month's Leaders" emoji="📆" rows={monthly} pointsKey="points" label="pts"
+          emptyMessage="This month's leaderboard resets on the 1st. Vote and post to climb."
+        />
       );
     }
 

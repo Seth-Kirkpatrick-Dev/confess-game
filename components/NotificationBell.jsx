@@ -81,7 +81,18 @@ export function NotificationBell() {
               <p className="text-textSecondary text-sm text-center py-6">Loading...</p>
             )}
             {!loading && notifications.length === 0 && (
-              <p className="text-textSecondary text-sm text-center py-6">No notifications yet</p>
+              <div className="px-4 py-8 text-center space-y-2">
+                <p className="text-2xl">🔔</p>
+                <p className="text-sm text-textPrimary font-medium">Nothing here yet</p>
+                <p className="text-xs text-textSecondary">When confessions you've voted on resolve, you'll see results here.</p>
+                <a
+                  href="/"
+                  onClick={() => setOpen(false)}
+                  className="inline-block mt-2 text-xs text-violet-400 hover:underline"
+                >
+                  Go vote on some confessions →
+                </a>
+              </div>
             )}
             {notifications.map(n => {
               if (n.type === 'achievement') {
