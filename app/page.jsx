@@ -133,19 +133,24 @@ export default function HomePage() {
           </p>
         )}
         <form onSubmit={handlePost} className="space-y-3">
-          <div className="relative">
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              maxLength={300}
-              rows={3}
-              placeholder={user ? 'Confess something... you decide if it\'s real or fake. 🤫' : 'Sign in to post a confession...'}
-              className="input resize-none"
-              disabled={!user}
-            />
-            <span className={`absolute bottom-2 right-3 text-xs ${content.length > 270 ? 'text-orange-400' : 'text-textSecondary'}`}>
-              {content.length}/300
-            </span>
+          <div className="space-y-1">
+            <div className="relative">
+              <textarea
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                maxLength={300}
+                rows={3}
+                placeholder={user ? 'Confess something... you decide if it\'s real or fake. 🤫' : 'Sign in to post a confession...'}
+                className={`input resize-none ${user && content.length > 0 && content.trim().length < 10 ? 'border-orange-500/60 focus:border-orange-500' : ''}`}
+                disabled={!user}
+              />
+              <span className={`absolute bottom-2 right-3 text-xs ${content.length >= 290 ? 'text-red-400' : content.length > 270 ? 'text-orange-400' : 'text-textSecondary'}`}>
+                {content.length}/300
+              </span>
+            </div>
+            {user && content.length > 0 && content.trim().length < 10 && (
+              <p className="text-xs text-orange-400">Minimum 10 characters ({10 - content.trim().length} more needed)</p>
+            )}
           </div>
 
           {/* True / False toggle */}
@@ -198,7 +203,7 @@ export default function HomePage() {
 
           <button
             type="submit"
-            disabled={posting || !user || !content.trim() || isTrue === null}
+            disabled={posting || !user || content.trim().length < 10 || isTrue === null}
             className="btn-primary w-full sm:w-auto"
           >
             {posting ? 'Posting...' : '🤫 Post Confession'}

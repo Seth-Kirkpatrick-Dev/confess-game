@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import {
   adminGetConfessions,
   adminDeleteConfession,
@@ -29,6 +30,7 @@ export default function AdminPage() {
   const [expandedReport, setExpandedReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
+  const [confirm, setConfirm] = useState(null); // { title, message, onConfirm }
 
   const flash = (msg) => {
     setActionMsg(msg);
@@ -92,14 +94,18 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this confession?')) return;
-    try {
-      await adminDeleteConfession(password, id);
-      setConfessions(prev => prev.filter(c => c.id !== id));
-      flash('Confession deleted');
-    } catch {
-      flash('Failed to delete');
-    }
+    setConfirm({
+      title: 'Delete confession?',
+      message: 'This will permanently remove the confession.',
+      onConfirm: async () => {
+        setConfirm(null);
+        try {
+          await adminDeleteConfession(password, id);
+          setConfessions(prev => prev.filter(c => c.id !== id));
+          flash('Confession deleted');
+        } catch { flash('Failed to delete'); }
+      },
+    });
   };
 
   const handleBan = async (id, isBanned) => {
@@ -127,24 +133,36 @@ export default function AdminPage() {
   };
 
   const handleDeleteFromQueue = async (confessionId) => {
-    if (!confirm('Delete this confession?')) return;
-    try {
-      await adminDeleteConfession(password, confessionId);
-      flash('Confession deleted');
-      setExpandedReport(null);
-      loadReports();
-    } catch { flash('Action failed'); }
+    setConfirm({
+      title: 'Delete this confession?',
+      message: 'The confession and its reports will be removed.',
+      onConfirm: async () => {
+        setConfirm(null);
+        try {
+          await adminDeleteConfession(password, confessionId);
+          flash('Confession deleted');
+          setExpandedReport(null);
+          loadReports();
+        } catch { flash('Action failed'); }
+      },
+    });
   };
 
   const handleBanFromQueue = async (userId, confessionId) => {
-    if (!confirm('Ban this user and delete their confession?')) return;
-    try {
-      await adminBanUser(password, userId);
-      if (confessionId) await adminDeleteConfession(password, confessionId);
-      flash('User banned');
-      setExpandedReport(null);
-      loadReports();
-    } catch { flash('Action failed'); }
+    setConfirm({
+      title: 'Ban user and delete confession?',
+      message: 'The user will be banned and their confession permanently deleted.',
+      onConfirm: async () => {
+        setConfirm(null);
+        try {
+          await adminBanUser(password, userId);
+          if (confessionId) await adminDeleteConfession(password, confessionId);
+          flash('User banned');
+          setExpandedReport(null);
+          loadReports();
+        } catch { flash('Action failed'); }
+      },
+    });
   };
 
   const handleClearUserFlag = async (userId) => {
@@ -192,6 +210,16 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      {confirm && (
+        <ConfirmModal
+          title={confirm.title}
+          message={confirm.message}
+          confirmLabel="Confirm"
+          danger
+          onConfirm={confirm.onConfirm}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-textPrimary">🔒 Admin Panel</h1>
         {actionMsg && (

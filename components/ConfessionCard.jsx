@@ -8,6 +8,7 @@ import { TierBadge } from '@/components/TierBadge';
 import { ReportModal } from '@/components/ReportModal';
 import { ReactionBar } from '@/components/ReactionBar';
 import { Avatar } from '@/components/Avatar';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 function formatTime(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000;
@@ -22,6 +23,7 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [localData, setLocalData] = useState(null);
 
   const data = localData || confession;
@@ -58,7 +60,6 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
   const isAuthor = user?.id === data.user_id;
 
   const handleDelete = async () => {
-    if (!confirm('Delete this confession? This cannot be undone.')) return;
     setDeleting(true);
     try {
       await deleteConfession(confession.id);
@@ -93,6 +94,16 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
         resolvedVotes={profile?.total_resolved_votes}
         onClose={() => setReportOpen(false)}
         showToast={showToast}
+      />
+    )}
+    {confirmDelete && (
+      <ConfirmModal
+        title="Delete confession?"
+        message="This cannot be undone. The confession will be permanently removed."
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => { setConfirmDelete(false); handleDelete(); }}
+        onCancel={() => setConfirmDelete(false)}
       />
     )}
     <div className="card relative overflow-hidden hover:border-border/80 transition-colors">
@@ -210,7 +221,7 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
               </span>
             ) : (
               <button
-                onClick={handleDelete}
+                onClick={() => setConfirmDelete(true)}
                 disabled={deleting}
                 className="text-textSecondary hover:text-red-400 text-xs px-2 py-1 rounded hover:bg-red-500/5 transition-colors"
                 title="Delete confession"

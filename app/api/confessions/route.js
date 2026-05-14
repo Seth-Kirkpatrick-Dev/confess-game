@@ -90,8 +90,8 @@ export async function POST(request) {
   try {
     const { content, is_true, prompt_category } = await request.json();
 
-    if (!content?.trim()) {
-      return NextResponse.json({ error: 'Confession cannot be empty' }, { status: 400 });
+    if (!content?.trim() || content.trim().length < 10) {
+      return NextResponse.json({ error: 'Confession must be at least 10 characters' }, { status: 400 });
     }
     if (content.length > 300) {
       return NextResponse.json({ error: 'Max 300 characters' }, { status: 400 });

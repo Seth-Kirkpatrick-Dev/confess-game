@@ -11,6 +11,7 @@ import { Avatar } from '@/components/Avatar';
 import { ReportModal } from '@/components/ReportModal';
 import { ReactionBar } from '@/components/ReactionBar';
 import { ConfessionDetailSkeleton } from '@/components/Skeletons';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 function formatDate(ts) {
   return new Date(ts).toLocaleDateString('en-US', {
@@ -23,6 +24,7 @@ export default function ConfessionPage() {
   const router = useRouter();
   const { user, profile } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { showToast, ToastContainer } = useToast();
 
   const [confession, setConfession] = useState(null);
@@ -48,7 +50,6 @@ export default function ConfessionPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this confession? This cannot be undone.')) return;
     setDeleting(true);
     try {
       await deleteConfession(id);
@@ -134,6 +135,16 @@ export default function ConfessionPage() {
 
   return (
     <>
+    {confirmDelete && (
+      <ConfirmModal
+        title="Delete confession?"
+        message="This cannot be undone. The confession will be permanently removed."
+        confirmLabel="Delete"
+        danger
+        onConfirm={() => { setConfirmDelete(false); handleDelete(); }}
+        onCancel={() => setConfirmDelete(false)}
+      />
+    )}
     {reportOpen && (
       <ReportModal
         confessionId={id}
@@ -282,7 +293,7 @@ export default function ConfessionPage() {
               </span>
             ) : (
               <button
-                onClick={handleDelete}
+                onClick={() => setConfirmDelete(true)}
                 disabled={deleting}
                 className="py-2 px-4 rounded-lg text-sm border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors"
               >

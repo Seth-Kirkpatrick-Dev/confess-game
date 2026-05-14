@@ -289,12 +289,12 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border pb-0">
+      <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-none -mb-px">
         {TABS.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`text-sm px-4 py-2 border-b-2 transition-colors ${
+            className={`text-sm px-4 py-2 border-b-2 whitespace-nowrap transition-colors flex-shrink-0 ${
               tab === t.id
                 ? 'border-violet-500 text-textPrimary'
                 : 'border-transparent text-textSecondary hover:text-textPrimary'

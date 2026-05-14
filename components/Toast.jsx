@@ -9,7 +9,7 @@ export function Toast({ message, type = 'success', onDone }) {
     const t = setTimeout(() => {
       setVisible(false);
       setTimeout(onDone, 300);
-    }, 2500);
+    }, 4000);
     return () => clearTimeout(t);
   }, [onDone]);
 
