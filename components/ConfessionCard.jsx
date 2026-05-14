@@ -4,11 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { voteOnConfession, deleteConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { TierBadge } from '@/components/TierBadge';
 import { ReportModal } from '@/components/ReportModal';
 import { ReactionBar } from '@/components/ReactionBar';
-import { Avatar } from '@/components/Avatar';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { UserDisplay } from '@/components/UserDisplay';
 
 function formatTime(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000;
@@ -190,17 +189,7 @@ export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
       {/* Footer */}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
         <div className="flex items-center gap-2 flex-wrap">
-          <Avatar username={data.profiles?.username} config={data.profiles?.avatar_config} size={18} />
-          <Link
-            href={`/u/${data.profiles?.username}`}
-            className="text-textSecondary hover:text-textPrimary text-xs transition-colors"
-          >
-            @{data.profiles?.username || 'anonymous'}
-          </Link>
-          {data.profiles?.featured_badge_icon && (
-            <span className="text-xs" title="Featured badge">{data.profiles.featured_badge_icon}</span>
-          )}
-          <TierBadge tier={data.profiles?.tier} />
+          <UserDisplay user={data.profiles} avatarSize={18} />
           <span className="text-border text-xs">·</span>
           <span className="text-textSecondary text-xs">{formatTime(data.created_at)}</span>
           {isResolved && (

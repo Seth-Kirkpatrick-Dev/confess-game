@@ -69,6 +69,7 @@ export function Navbar() {
           <div className="hidden sm:flex items-center gap-0.5 flex-1">
             <NavLink href="/">Feed</NavLink>
             <NavLink href="/leaderboard">Leaderboard</NavLink>
+            <NavLink href="/shop">Shop</NavLink>
           </div>
 
           {/* Right side */}
@@ -196,6 +197,12 @@ export function Navbar() {
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-textSecondary hover:text-textPrimary hover:bg-surfaceHover transition-colors"
             >
               🏆 Leaderboard
+            </Link>
+            <Link
+              href="/shop"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-textSecondary hover:text-textPrimary hover:bg-surfaceHover transition-colors"
+            >
+              🛍️ Shop
             </Link>
             {user && (
               <Link

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getUserProfile, updateAvatar, updateFeaturedBadge, completeOnboarding } from '@/lib/api';
+import { getUserProfile, updateAvatar, updateFeaturedBadge, completeOnboarding, equipCosmetic, unequipCosmetic } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AVATAR_STYLES, avatarUrl } from '@/components/Avatar';
 import { TierBadge } from '@/components/TierBadge';
@@ -446,6 +446,13 @@ export default function ProfilePage() {
             currentId={profile.featured_badge_id}
             onSave={handleSaveBadge}
           />
+          <div className="card space-y-3">
+            <p className="text-xs text-textSecondary uppercase tracking-wider font-semibold">Cosmetics</p>
+            <p className="text-xs text-textSecondary">Browse and equip items from the Shop. Owned items will appear here to equip.</p>
+            <Link href="/shop" className="btn-ghost text-sm inline-flex">
+              Open Shop →
+            </Link>
+          </div>
           <div className="card space-y-3">
             <p className="text-xs text-textSecondary uppercase tracking-wider font-semibold">Tutorial</p>
             <p className="text-xs text-textSecondary">Forgot how the game works? Replay the intro.</p>

@@ -16,7 +16,7 @@ export async function GET(request, { params }) {
 
     const { data: confession, error } = await supabaseServer
       .from('confessions')
-      .select('*, profiles(username, tier, avatar_config, featured_badge_icon)')
+      .select('*, profiles(username, tier, avatar_config, featured_badge_icon, equipped_name_color_class, equipped_border_class)')
       .eq('id', id)
       .eq('is_deleted', false)
       .single();

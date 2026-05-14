@@ -87,7 +87,7 @@ export async function GET(request) {
 
         const { data: voterProfile } = await supabaseServer
           .from('profiles')
-          .select('detection_points, weekly_points, monthly_points, correct_votes, total_resolved_votes, consecutive_correct_votes')
+          .select('detection_points, weekly_points, monthly_points, spendable_points, correct_votes, total_resolved_votes, consecutive_correct_votes')
           .eq('id', vote.user_id)
           .single();
 
@@ -103,6 +103,7 @@ export async function GET(request) {
               detection_points:          voterProfile.detection_points + pointsAwarded,
               weekly_points:             (voterProfile.weekly_points || 0) + pointsAwarded,
               monthly_points:            (voterProfile.monthly_points || 0) + pointsAwarded,
+              spendable_points:          (voterProfile.spendable_points || 0) + Math.max(0, pointsAwarded),
               correct_votes:             newCorrect,
               total_resolved_votes:      newTotal,
               tier:                      calculateTier(newCorrect, newTotal),
