@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getUserProfile, updateAvatar, updateFeaturedBadge } from '@/lib/api';
+import { getUserProfile, updateAvatar, updateFeaturedBadge, completeOnboarding } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AVATAR_STYLES, avatarUrl } from '@/components/Avatar';
 import { TierBadge } from '@/components/TierBadge';
+import { OnboardingModal } from '@/components/OnboardingModal';
 
 const TIER_CONFIG = {
   Newbie:        { color: 'text-textSecondary', bg: 'bg-surface border-border',               icon: '👤', desc: 'Not enough data yet' },
@@ -161,6 +162,7 @@ export default function ProfilePage() {
   const [saveMsg, setSaveMsg] = useState('');
 
   const isOwnProfile = myProfile?.username === username;
+  const [replayOnboarding, setReplayOnboarding] = useState(false);
 
   useEffect(() => {
     getUserProfile(username)
@@ -224,6 +226,12 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      {replayOnboarding && (
+        <OnboardingModal onDone={async () => {
+          await completeOnboarding().catch(() => {});
+          setReplayOnboarding(false);
+        }} />
+      )}
       <Link href="/" className="text-textSecondary hover:text-textPrimary text-sm">← Feed</Link>
 
       {/* Header card */}
@@ -434,6 +442,16 @@ export default function ProfilePage() {
             currentId={profile.featured_badge_id}
             onSave={handleSaveBadge}
           />
+          <div className="card space-y-3">
+            <p className="text-xs text-textSecondary uppercase tracking-wider font-semibold">Tutorial</p>
+            <p className="text-xs text-textSecondary">Forgot how the game works? Replay the intro.</p>
+            <button
+              onClick={() => setReplayOnboarding(true)}
+              className="btn-ghost text-sm"
+            >
+              Replay tutorial
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -7,11 +7,20 @@ import { getTodayPrompt } from '@/lib/daily-prompt';
 import { useAuth } from '@/context/AuthContext';
 import { ConfessionCard } from '@/components/ConfessionCard';
 import { AdPlaceholder } from '@/components/AdPlaceholder';
+import { OnboardingModal } from '@/components/OnboardingModal';
 import { useToast } from '@/components/Toast';
 
 export default function HomePage() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, setProfile, loading: authLoading } = useAuth();
   const { showToast, ToastContainer } = useToast();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Show onboarding once when we first know the user hasn't completed it
+  useEffect(() => {
+    if (!authLoading && user && profile && profile.onboarding_completed === false) {
+      setShowOnboarding(true);
+    }
+  }, [authLoading, user, profile?.onboarding_completed]);
 
   const [confessions, setConfessions] = useState([]);
   const [page, setPage] = useState(1);
@@ -70,6 +79,14 @@ export default function HomePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       <ToastContainer />
+      {showOnboarding && (
+        <OnboardingModal
+          onDone={() => {
+            setShowOnboarding(false);
+            setProfile(prev => prev ? { ...prev, onboarding_completed: true } : prev);
+          }}
+        />
+      )}
 
       <AdPlaceholder slot="banner" />
 

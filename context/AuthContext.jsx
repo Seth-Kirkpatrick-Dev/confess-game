@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
   const refreshProfile = () => fetchProfile(user?.id);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, signup, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, setProfile, loading, login, signup, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
