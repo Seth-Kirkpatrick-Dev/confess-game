@@ -73,6 +73,21 @@ export default function HomePage() {
 
       <AdPlaceholder slot="banner" />
 
+      {/* Streak bar (logged-in users) */}
+      {user && profile && (
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-surface border border-border">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{profile.current_streak > 0 ? '🔥' : '💤'}</span>
+            <span className="text-textPrimary text-sm font-medium">
+              {profile.current_streak > 0 ? `${profile.current_streak} day streak` : 'No streak yet'}
+            </span>
+          </div>
+          <Link href={`/u/${profile.username}`} className="text-textSecondary hover:text-textPrimary text-xs transition-colors">
+            View profile →
+          </Link>
+        </div>
+      )}
+
       {/* Daily prompt banner */}
       <div className="card bg-violet-500/10 border-violet-500/20 flex items-center justify-between gap-3">
         <div>
