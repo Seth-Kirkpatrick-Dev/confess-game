@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Avatar, AVATAR_STYLES, avatarUrl } from '@/components/Avatar';
 import { TierBadge } from '@/components/TierBadge';
 import { OnboardingModal } from '@/components/OnboardingModal';
+import { ProfileHeaderSkeleton, SkeletonBlock } from '@/components/Skeletons';
 
 const TIER_CONFIG = {
   Newbie:        { color: 'text-textSecondary', bg: 'bg-surface border-border',               icon: '👤', desc: 'Not enough data yet' },
@@ -191,8 +192,11 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        <div className="card animate-pulse h-32" />
-        <div className="grid grid-cols-3 gap-3">{[1, 2, 3].map(i => <div key={i} className="card animate-pulse h-20" />)}</div>
+        <ProfileHeaderSkeleton />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => <SkeletonBlock key={i} className="h-20" />)}
+        </div>
+        <SkeletonBlock className="h-28" />
       </div>
     );
   }

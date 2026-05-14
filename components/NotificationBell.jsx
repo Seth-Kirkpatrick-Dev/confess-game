@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { getNotifications, markNotificationsRead } from '@/lib/api';
+import { NotificationRowSkeleton } from '@/components/Skeletons';
 
 function timeAgo(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000;
@@ -78,7 +79,9 @@ export function NotificationBell() {
           </div>
           <div className="max-h-96 overflow-y-auto">
             {loading && (
-              <p className="text-textSecondary text-sm text-center py-6">Loading...</p>
+              <div>
+                {[1, 2, 3].map(i => <NotificationRowSkeleton key={i} />)}
+              </div>
             )}
             {!loading && notifications.length === 0 && (
               <div className="px-4 py-8 text-center space-y-2">

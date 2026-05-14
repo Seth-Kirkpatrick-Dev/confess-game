@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { TierBadge } from '@/components/TierBadge';
 import { Avatar } from '@/components/Avatar';
 import { AdPlaceholder } from '@/components/AdPlaceholder';
+import { LeaderRowSkeleton } from '@/components/Skeletons';
 
 const TABS = ['All-Time', 'This Week', 'This Month'];
 
@@ -99,15 +100,8 @@ export default function LeaderboardPage() {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="space-y-6">
-          {[1, 2].map(i => (
-            <div key={i} className="card animate-pulse">
-              <div className="h-4 bg-surfaceHover rounded w-48 mb-4" />
-              {[1, 2, 3].map(j => (
-                <div key={j} className="h-12 bg-surfaceHover rounded mb-2" />
-              ))}
-            </div>
-          ))}
+        <div className="card space-y-2">
+          {[1, 2, 3, 4, 5].map(i => <LeaderRowSkeleton key={i} />)}
         </div>
       );
     }

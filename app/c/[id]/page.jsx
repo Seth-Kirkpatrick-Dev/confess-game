@@ -10,6 +10,7 @@ import { TierBadge } from '@/components/TierBadge';
 import { Avatar } from '@/components/Avatar';
 import { ReportModal } from '@/components/ReportModal';
 import { ReactionBar } from '@/components/ReactionBar';
+import { ConfessionDetailSkeleton } from '@/components/Skeletons';
 
 function formatDate(ts) {
   return new Date(ts).toLocaleDateString('en-US', {
@@ -89,12 +90,9 @@ export default function ConfessionPage() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="card animate-pulse space-y-4">
-          <div className="h-4 bg-surfaceHover rounded w-3/4" />
-          <div className="h-4 bg-surfaceHover rounded w-1/2" />
-          <div className="h-24 bg-surfaceHover rounded" />
-        </div>
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="h-4 bg-surfaceHover rounded w-16 animate-pulse" />
+        <ConfessionDetailSkeleton />
       </div>
     );
   }

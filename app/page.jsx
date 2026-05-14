@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ConfessionCard } from '@/components/ConfessionCard';
 import { AdPlaceholder } from '@/components/AdPlaceholder';
 import { OnboardingModal } from '@/components/OnboardingModal';
+import { ConfessionCardSkeleton } from '@/components/Skeletons';
 import { useToast } from '@/components/Toast';
 
 export default function HomePage() {
@@ -213,13 +214,7 @@ export default function HomePage() {
 
         {loadingFeed ? (
           <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="card animate-pulse">
-                <div className="h-4 bg-surfaceHover rounded w-3/4 mb-2" />
-                <div className="h-4 bg-surfaceHover rounded w-1/2 mb-4" />
-                <div className="h-10 bg-surfaceHover rounded" />
-              </div>
-            ))}
+            {[1, 2, 3].map(i => <ConfessionCardSkeleton key={i} />)}
           </div>
         ) : confessions.length === 0 ? (
           <div className="card text-center py-12 space-y-3">
