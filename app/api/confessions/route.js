@@ -13,7 +13,7 @@ export async function GET(request) {
 
     const { data, error, count } = await supabaseServer
       .from('confessions')
-      .select('*, profiles(username, tier)', { count: 'exact' })
+      .select('*, profiles(username, tier, avatar_config, featured_badge_icon)', { count: 'exact' })
       .eq('is_deleted', false)
       .eq('is_hidden_pending_review', false)
       .order('created_at', { ascending: false })

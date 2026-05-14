@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationBell } from '@/components/NotificationBell';
 import { TierBadge } from '@/components/TierBadge';
+import { Avatar } from '@/components/Avatar';
 
 function NavLink({ href, children }) {
   const pathname = usePathname();
@@ -82,8 +83,12 @@ export function Navbar() {
                     onClick={() => setDropdownOpen(v => !v)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-white/5 transition-colors text-sm"
                   >
+                    <Avatar username={profile?.username} config={profile?.avatar_config} size={22} />
                     <span className="text-textSecondary">@{profile?.username || 'you'}</span>
                     <TierBadge tier={profile?.tier} />
+                    {profile?.featured_badge_icon && (
+                      <span className="text-xs" title="Featured badge">{profile.featured_badge_icon}</span>
+                    )}
                     <span className="text-textSecondary text-xs ml-0.5">▾</span>
                   </button>
 
@@ -163,8 +168,12 @@ export function Navbar() {
             {/* User info */}
             {user && profile && (
               <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-xl bg-surface border border-border">
+                <Avatar username={profile.username} config={profile.avatar_config} size={40} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-textPrimary text-sm font-medium">@{profile.username}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-textPrimary text-sm font-medium">@{profile.username}</p>
+                    {profile.featured_badge_icon && <span className="text-sm">{profile.featured_badge_icon}</span>}
+                  </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <TierBadge tier={profile.tier} showLabel />
                     <span className="text-textSecondary text-xs">
