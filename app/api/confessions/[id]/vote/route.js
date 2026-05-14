@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { getAuthUser } from '@/lib/api-helpers';
 import { updateStreak } from '@/lib/streak';
+import { checkAchievements } from '@/lib/achievements';
 
 export async function POST(request, { params }) {
   const auth = await getAuthUser(request);
@@ -57,8 +58,11 @@ export async function POST(request, { params }) {
       .update({ real_votes: newReal, fake_votes: newFake })
       .eq('id', id);
 
-    // Streak update — non-blocking, best-effort
-    updateStreak(user.id).catch(err => console.error('Streak update failed:', err.message));
+    // Non-blocking: streak + achievement check
+    Promise.all([
+      updateStreak(user.id),
+      checkAchievements(user.id, { totalVotes: null }), // totalVotes fetched inside checker
+    ]).catch(err => console.error('Post-vote side effects failed:', err.message));
 
     return NextResponse.json({
       success: true,

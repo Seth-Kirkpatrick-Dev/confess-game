@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import { checkAchievements, grantAchievement } from '@/lib/achievements';
 
 function calculateTier(correctVotes, totalResolvedVotes) {
   if (totalResolvedVotes < 10) return 'Newbie';
@@ -91,17 +92,24 @@ export async function GET(request) {
           .single();
 
         if (voterProfile) {
-          const newCorrect = voterProfile.correct_votes + (isCorrect ? 1 : 0);
-          const newTotal = voterProfile.total_resolved_votes + 1;
+          const newCorrect   = voterProfile.correct_votes + (isCorrect ? 1 : 0);
+          const newTotal     = voterProfile.total_resolved_votes + 1;
+          const newConsec    = isCorrect
+            ? (voterProfile.consecutive_correct_votes || 0) + 1
+            : 0;
           await supabaseServer
             .from('profiles')
             .update({
-              detection_points: voterProfile.detection_points + pointsAwarded,
-              correct_votes: newCorrect,
-              total_resolved_votes: newTotal,
-              tier: calculateTier(newCorrect, newTotal),
+              detection_points:          voterProfile.detection_points + pointsAwarded,
+              correct_votes:             newCorrect,
+              total_resolved_votes:      newTotal,
+              tier:                      calculateTier(newCorrect, newTotal),
+              consecutive_correct_votes: newConsec,
             })
             .eq('id', vote.user_id);
+
+          // Non-blocking achievement check per voter (accuracy + streak + vote count)
+          checkAchievements(vote.user_id).catch(() => {});
         }
 
         notificationRows.push({
@@ -123,6 +131,33 @@ export async function GET(request) {
           user_id_param: confession.user_id,
           points_param: posterPoints,
         });
+      }
+
+      // Poster-side achievements
+      if (confession.user_id && totalVotes >= 5) {
+        const wrongVotes = confession.is_true ? confession.fake_votes : confession.real_votes;
+
+        // Perfect Fool: ≥45% voted wrong at resolution
+        if (wrongVotes / totalVotes >= 0.45) {
+          grantAchievement(confession.user_id, 'Perfect Fool').catch(() => {});
+        }
+
+        // Update total_fooled_voters and check Deceiver / Master Deceiver
+        if (wrongVotes > 0) {
+          const { data: posterProfile } = await supabaseServer
+            .from('profiles')
+            .select('total_fooled_voters')
+            .eq('id', confession.user_id)
+            .single();
+
+          if (posterProfile) {
+            await supabaseServer
+              .from('profiles')
+              .update({ total_fooled_voters: posterProfile.total_fooled_voters + wrongVotes })
+              .eq('id', confession.user_id);
+            checkAchievements(confession.user_id).catch(() => {});
+          }
+        }
       }
 
       resolved++;

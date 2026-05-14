@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { getAuthUser } from '@/lib/api-helpers';
 import { updateStreak } from '@/lib/streak';
+import { checkAchievements } from '@/lib/achievements';
 
 export async function GET(request) {
   try {
@@ -123,8 +124,11 @@ export async function POST(request) {
 
     if (error) throw error;
 
-    // Streak update — non-blocking
-    updateStreak(user.id).catch(err => console.error('Streak update failed:', err.message));
+    // Non-blocking: streak + achievement check
+    Promise.all([
+      updateStreak(user.id),
+      checkAchievements(user.id),
+    ]).catch(err => console.error('Post-confession side effects failed:', err.message));
 
     return NextResponse.json({ confession: data }, { status: 201 });
   } catch (err) {
