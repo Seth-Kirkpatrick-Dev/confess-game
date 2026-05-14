@@ -1,0 +1,16 @@
+name: Resolve confessions (hourly)
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: # allow manual trigger from GitHub UI
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger resolution cron
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            ${{ secrets.PRODUCTION_URL }}/api/cron/resolve

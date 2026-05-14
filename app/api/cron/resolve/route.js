@@ -26,8 +26,8 @@ export async function GET(request) {
 
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
-  // Limit per run prevents timeout on backfill day; next cron picks up the rest
-  const BATCH_SIZE = 25;
+  // Daily run — process up to 200 at once; next day picks up the rest
+  const BATCH_SIZE = 200;
 
   const { data: confessions, error } = await supabaseServer
     .from('confessions')
