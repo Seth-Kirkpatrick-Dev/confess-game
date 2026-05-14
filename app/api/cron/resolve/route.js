@@ -26,13 +26,17 @@ export async function GET(request) {
 
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
+  // Limit per run prevents timeout on backfill day; next cron picks up the rest
+  const BATCH_SIZE = 25;
+
   const { data: confessions, error } = await supabaseServer
     .from('confessions')
     .select('*')
     .eq('is_resolved', false)
     .eq('is_deleted', false)
     .not('is_true', 'is', null)
-    .lte('created_at', cutoff);
+    .lte('created_at', cutoff)
+    .limit(BATCH_SIZE);
 
   if (error) {
     console.error('Cron resolve fetch:', error.message);
@@ -44,6 +48,18 @@ export async function GET(request) {
 
   for (const confession of confessions) {
     try {
+      // Mark resolved immediately to prevent double-processing if cron fires twice
+      const { error: lockErr } = await supabaseServer
+        .from('confessions')
+        .update({ is_resolved: true, resolved_at: new Date().toISOString() })
+        .eq('id', confession.id)
+        .eq('is_resolved', false); // Only succeeds if not already resolved (race guard)
+
+      if (lockErr) {
+        console.error(`Failed to lock confession ${confession.id}:`, lockErr.message);
+        continue;
+      }
+
       const { data: votes } = await supabaseServer
         .from('votes')
         .select('id, user_id, vote_type')
@@ -108,11 +124,6 @@ export async function GET(request) {
           points_param: posterPoints,
         });
       }
-
-      await supabaseServer
-        .from('confessions')
-        .update({ is_resolved: true, resolved_at: new Date().toISOString() })
-        .eq('id', confession.id);
 
       resolved++;
     } catch (err) {
