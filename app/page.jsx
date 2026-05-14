@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { getConfessions, postConfession } from '@/lib/api';
+import { getTodayPrompt } from '@/lib/daily-prompt';
 import { useAuth } from '@/context/AuthContext';
 import { ConfessionCard } from '@/components/ConfessionCard';
 import { AdPlaceholder } from '@/components/AdPlaceholder';
@@ -18,7 +19,11 @@ export default function HomePage() {
   const [loadingFeed, setLoadingFeed] = useState(true);
 
   const [content, setContent] = useState('');
+  const [isTrue, setIsTrue] = useState(null); // null = not picked yet
+  const [tagPrompt, setTagPrompt] = useState(false);
   const [posting, setPosting] = useState(false);
+
+  const todayPrompt = getTodayPrompt();
 
   const fetchFeed = useCallback(async (p = 1) => {
     setLoadingFeed(true);
@@ -39,17 +44,20 @@ export default function HomePage() {
     e.preventDefault();
     if (!user) { showToast('Log in to post a confession', 'info'); return; }
     if (!content.trim()) return;
+    if (isTrue === null) { showToast('Select True or False before posting', 'info'); return; }
     setPosting(true);
     try {
-      await postConfession(content.trim());
+      const category = tagPrompt ? todayPrompt.category : null;
+      await postConfession(content.trim(), isTrue, category);
       setContent('');
-      showToast('Confession posted!', 'success');
+      setIsTrue(null);
+      setTagPrompt(false);
+      showToast('Confession posted! Results in 48h.', 'success');
       fetchFeed(1);
       setPage(1);
     } catch (err) {
       const msg = err?.response?.data?.error || 'Failed to post';
-      const isLimit = err?.response?.data?.limitReached;
-      if (isLimit) {
+      if (err?.response?.data?.limitReached) {
         showToast('Daily limit hit (3/day). Upgrade to Premium!', 'error');
       } else {
         showToast(msg, 'error');
@@ -59,14 +67,26 @@ export default function HomePage() {
     }
   };
 
-  const remaining = content.length;
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       <ToastContainer />
 
       <AdPlaceholder slot="banner" />
 
+      {/* Daily prompt banner */}
+      <div className="card bg-violet-500/10 border-violet-500/20 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs text-violet-300 font-semibold uppercase tracking-wider mb-0.5">Today's Theme</p>
+          <p className="text-textPrimary font-medium">
+            {todayPrompt.emoji} {todayPrompt.category}
+          </p>
+        </div>
+        <p className="text-textSecondary text-xs text-right max-w-[180px]">
+          Tag your confession to earn a <span className="text-violet-300 font-semibold">1.5× bonus</span> at resolution
+        </p>
+      </div>
+
+      {/* Post form */}
       <div className="card">
         <h2 className="text-sm font-semibold text-textSecondary uppercase tracking-wider mb-3">
           Post a Confession
@@ -86,17 +106,66 @@ export default function HomePage() {
               onChange={e => setContent(e.target.value)}
               maxLength={300}
               rows={3}
-              placeholder={user ? 'Confess something... real or fake, you decide. 🤫' : 'Sign in to post a confession...'}
+              placeholder={user ? 'Confess something... you decide if it\'s real or fake. 🤫' : 'Sign in to post a confession...'}
               className="input resize-none"
               disabled={!user}
             />
-            <span className={`absolute bottom-2 right-3 text-xs ${remaining > 270 ? 'text-orange-400' : 'text-textSecondary'}`}>
-              {remaining}/300
+            <span className={`absolute bottom-2 right-3 text-xs ${content.length > 270 ? 'text-orange-400' : 'text-textSecondary'}`}>
+              {content.length}/300
             </span>
           </div>
+
+          {/* True / False toggle */}
+          {user && (
+            <div className="space-y-1">
+              <p className="text-xs text-textSecondary">Is this confession actually true?</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTrue(true)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    isTrue === true
+                      ? 'bg-green-500/20 text-green-400 border-green-500/50'
+                      : 'bg-surface text-textSecondary border-border hover:border-green-500/30'
+                  }`}
+                >
+                  ✅ True
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsTrue(false)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    isTrue === false
+                      ? 'bg-red-500/20 text-red-400 border-red-500/50'
+                      : 'bg-surface text-textSecondary border-border hover:border-red-500/30'
+                  }`}
+                >
+                  ❌ False
+                </button>
+              </div>
+              <p className="text-xs text-textSecondary italic">Only you know. The community guesses.</p>
+            </div>
+          )}
+
+          {/* Daily prompt tag toggle */}
+          {user && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={tagPrompt}
+                onChange={e => setTagPrompt(e.target.checked)}
+                className="w-4 h-4 rounded accent-violet-500"
+              />
+              <span className="text-xs text-textSecondary">
+                Tag as today's theme: <span className="text-violet-300">{todayPrompt.emoji} {todayPrompt.category}</span>
+                <span className="text-violet-400 ml-1">(+1.5× bonus)</span>
+              </span>
+            </label>
+          )}
+
           <button
             type="submit"
-            disabled={posting || !user || !content.trim()}
+            disabled={posting || !user || !content.trim() || isTrue === null}
             className="btn-primary w-full sm:w-auto"
           >
             {posting ? 'Posting...' : '🤫 Post Confession'}
@@ -104,6 +173,7 @@ export default function HomePage() {
         </form>
       </div>
 
+      {/* Feed */}
       <div className="space-y-4">
         <h2 className="text-sm font-semibold text-textSecondary uppercase tracking-wider">
           Latest Confessions

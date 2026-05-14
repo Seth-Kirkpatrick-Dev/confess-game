@@ -26,6 +26,9 @@ function LeaderTable({ title, emoji, data, pointsKey, label }) {
                 <span className="text-textPrimary text-sm font-medium">
                   @{row.username}
                 </span>
+                {row.tier && row.tier !== 'Newbie' && (
+                  <span className="text-xs text-violet-400">{row.tier}</span>
+                )}
               </div>
               <div className="text-right">
                 <span className="text-violet-400 font-bold text-sm">{row[pointsKey]}</span>
@@ -69,7 +72,7 @@ export default function LeaderboardPage() {
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-textPrimary">Leaderboard</h1>
-        <p className="text-textSecondary text-sm mt-1">Top players this season</p>
+        <p className="text-textSecondary text-sm mt-1">All-time top players</p>
       </div>
 
       <AdPlaceholder slot="banner" />
@@ -93,9 +96,10 @@ export default function LeaderboardPage() {
       <div className="card bg-violet-500/10 border-violet-500/20">
         <h3 className="text-sm font-semibold text-violet-300 mb-2">How points work</h3>
         <ul className="text-xs text-textSecondary space-y-1.5">
-          <li>🎭 <span className="text-textPrimary">+10 pts</span> — Your confession fools the majority (10+ votes, majority says Real)</li>
-          <li>❌ <span className="text-textPrimary">-2 pts</span> — Majority catches your confession as Fake</li>
-          <li>🔍 <span className="text-textPrimary">+5 pts</span> — You vote with the majority on a confession</li>
+          <li>🎭 <span className="text-textPrimary">Up to +30 pts</span> — Poster score at 48h: scaled by how close the vote was to 50/50 (1.5× with daily theme tag)</li>
+          <li>🔍 <span className="text-textPrimary">+5 pts</span> — Your vote matched the poster's real truth at resolution</li>
+          <li>❌ <span className="text-textPrimary">-2 pts</span> — Your vote was wrong at resolution</li>
+          <li>🏅 Tiers unlock at 10+ resolved votes based on your accuracy</li>
         </ul>
       </div>
     </div>

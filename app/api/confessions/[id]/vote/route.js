@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { getAuthUser } from '@/lib/api-helpers';
+import { updateStreak } from '@/lib/streak';
 
 export async function POST(request, { params }) {
   const auth = await getAuthUser(request);
@@ -17,12 +18,17 @@ export async function POST(request, { params }) {
 
     const { data: confession, error: confErr } = await supabaseServer
       .from('confessions')
-      .select('*')
+      .select('id, user_id, real_votes, fake_votes, is_resolved, is_deleted')
       .eq('id', id)
       .eq('is_deleted', false)
       .single();
 
-    if (confErr || !confession) return NextResponse.json({ error: 'Confession not found' }, { status: 404 });
+    if (confErr || !confession) {
+      return NextResponse.json({ error: 'Confession not found' }, { status: 404 });
+    }
+    if (confession.is_resolved) {
+      return NextResponse.json({ error: 'This confession has already resolved' }, { status: 400 });
+    }
     if (confession.user_id === user.id) {
       return NextResponse.json({ error: 'You cannot vote on your own confession' }, { status: 400 });
     }
@@ -34,7 +40,9 @@ export async function POST(request, { params }) {
       .eq('confession_id', id)
       .single();
 
-    if (existing) return NextResponse.json({ error: 'You already voted on this confession' }, { status: 400 });
+    if (existing) {
+      return NextResponse.json({ error: 'You already voted on this confession' }, { status: 400 });
+    }
 
     const { error: voteErr } = await supabaseServer
       .from('votes')
@@ -43,46 +51,20 @@ export async function POST(request, { params }) {
 
     const newReal = vote === 'real' ? confession.real_votes + 1 : confession.real_votes;
     const newFake = vote === 'fake' ? confession.fake_votes + 1 : confession.fake_votes;
-    const total = newReal + newFake;
 
     await supabaseServer
       .from('confessions')
       .update({ real_votes: newReal, fake_votes: newFake })
       .eq('id', id);
 
-    const majority = newReal >= newFake ? 'real' : 'fake';
-    let pointsEarned = 0;
-
-    if (vote === majority) {
-      pointsEarned = 5;
-      await supabaseServer.rpc('add_detection_points', {
-        user_id_param: user.id,
-        points_param: 5,
-      });
-    }
-
-    const RESOLVE_THRESHOLD = 10;
-    if (total >= RESOLVE_THRESHOLD && !confession.is_resolved) {
-      await supabaseServer
-        .from('confessions')
-        .update({ is_resolved: true })
-        .eq('id', id);
-
-      if (confession.user_id) {
-        const posterPts = majority === 'real' ? 10 : -2;
-        await supabaseServer.rpc('add_confession_points', {
-          user_id_param: confession.user_id,
-          points_param: posterPts,
-        });
-      }
-    }
+    // Streak update — non-blocking, best-effort
+    updateStreak(user.id).catch(err => console.error('Streak update failed:', err.message));
 
     return NextResponse.json({
       success: true,
       real_votes: newReal,
       fake_votes: newFake,
-      total_votes: total,
-      pointsEarned,
+      total_votes: newReal + newFake,
       userVote: vote,
     });
   } catch (err) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { getAuthUser } from '@/lib/api-helpers';
+import { updateStreak } from '@/lib/streak';
 
 export async function GET(request) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request) {
 
     const { data, error, count } = await supabaseServer
       .from('confessions')
-      .select('*, profiles(username)', { count: 'exact' })
+      .select('*, profiles(username, tier)', { count: 'exact' })
       .eq('is_deleted', false)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -32,7 +33,19 @@ export async function GET(request) {
     }
 
     return NextResponse.json({
-      confessions: data.map(c => ({ ...c, userVote: userVotes[c.id] || null })),
+      confessions: data.map(c => {
+        const userVote = userVotes[c.id] || null;
+        const canSeeVotes = c.is_resolved || userVote !== null;
+        return {
+          ...c,
+          userVote,
+          // Hide split until user votes or confession resolves (anti-cheat)
+          real_votes: canSeeVotes ? c.real_votes : null,
+          fake_votes: canSeeVotes ? c.fake_votes : null,
+          // Never expose poster's truth until resolved
+          is_true: c.is_resolved ? c.is_true : undefined,
+        };
+      }),
       total: count,
       page,
       totalPages: Math.ceil((count || 0) / limit),
@@ -49,9 +62,17 @@ export async function POST(request) {
   const { user, profile } = auth;
 
   try {
-    const { content } = await request.json();
-    if (!content?.trim()) return NextResponse.json({ error: 'Confession cannot be empty' }, { status: 400 });
-    if (content.length > 300) return NextResponse.json({ error: 'Max 300 characters' }, { status: 400 });
+    const { content, is_true, prompt_category } = await request.json();
+
+    if (!content?.trim()) {
+      return NextResponse.json({ error: 'Confession cannot be empty' }, { status: 400 });
+    }
+    if (content.length > 300) {
+      return NextResponse.json({ error: 'Max 300 characters' }, { status: 400 });
+    }
+    if (typeof is_true !== 'boolean') {
+      return NextResponse.json({ error: 'You must declare your confession True or False' }, { status: 400 });
+    }
 
     if (!profile?.is_premium) {
       const today = new Date();
@@ -71,11 +92,15 @@ export async function POST(request) {
 
     const { data, error } = await supabaseServer
       .from('confessions')
-      .insert({ user_id: user.id, content: content.trim() })
+      .insert({ user_id: user.id, content: content.trim(), is_true, prompt_category: prompt_category || null })
       .select()
       .single();
 
     if (error) throw error;
+
+    // Streak update — non-blocking
+    updateStreak(user.id).catch(err => console.error('Streak update failed:', err.message));
+
     return NextResponse.json({ confession: data }, { status: 201 });
   } catch (err) {
     console.error('POST /api/confessions:', err.message);

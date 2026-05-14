@@ -4,9 +4,9 @@ import { supabaseServer } from '@/lib/supabase-server';
 export async function GET() {
   try {
     const [{ data: confessors, error: e1 }, { data: detectors, error: e2 }] = await Promise.all([
-      supabaseServer.from('profiles').select('id, username, confession_points, detection_points')
+      supabaseServer.from('profiles').select('id, username, confession_points, detection_points, tier')
         .eq('is_banned', false).order('confession_points', { ascending: false }).limit(10),
-      supabaseServer.from('profiles').select('id, username, confession_points, detection_points')
+      supabaseServer.from('profiles').select('id, username, confession_points, detection_points, tier')
         .eq('is_banned', false).order('detection_points', { ascending: false }).limit(10),
     ]);
 
