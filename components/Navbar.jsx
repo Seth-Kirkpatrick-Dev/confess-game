@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { NotificationBell } from '@/components/NotificationBell';
 
 export function Navbar() {
   const { user, profile, logout } = useAuth();
@@ -48,6 +49,8 @@ export function Navbar() {
                 <span className="text-textSecondary text-xs">{profile?.username || 'User'}</span>
                 <span className="text-violet-400 text-xs font-bold">{totalPoints}pts</span>
               </div>
+
+              <NotificationBell />
 
               <button
                 onClick={handleLogout}
