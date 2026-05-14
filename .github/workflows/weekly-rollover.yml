@@ -1,0 +1,22 @@
+name: Weekly Leaderboard Rollover
+
+on:
+  schedule:
+    # Sunday 23:55 UTC — just before midnight, after the week ends
+    - cron: '55 23 * * 0'
+  workflow_dispatch:
+    inputs:
+      type:
+        description: 'Rollover type'
+        required: true
+        default: 'weekly'
+
+jobs:
+  rollover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger rollover
+        run: |
+          curl -f -X GET \
+            "${{ secrets.APP_URL }}/api/cron/rollover?type=weekly" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

@@ -1,0 +1,22 @@
+name: Monthly Leaderboard Rollover
+
+on:
+  schedule:
+    # 1st of each month at 00:05 UTC — captures previous month's final standings
+    - cron: '5 0 1 * *'
+  workflow_dispatch:
+    inputs:
+      type:
+        description: 'Rollover type'
+        required: true
+        default: 'monthly'
+
+jobs:
+  rollover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger rollover
+        run: |
+          curl -f -X GET \
+            "${{ secrets.APP_URL }}/api/cron/rollover?type=monthly" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
