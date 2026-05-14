@@ -214,6 +214,7 @@ export default function HomePage() {
               key={c.id}
               confession={c}
               onVoted={() => fetchFeed(page)}
+              onDeleted={(id) => setConfessions(prev => prev.filter(x => x.id !== id))}
               showToast={showToast}
             />
           ))

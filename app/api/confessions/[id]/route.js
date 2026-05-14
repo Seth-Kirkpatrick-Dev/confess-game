@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import { getAuthUser } from '@/lib/api-helpers';
 
 export async function GET(request, { params }) {
   try {
@@ -37,6 +38,13 @@ export async function GET(request, { params }) {
 
     const canSeeVotes = confession.is_resolved || userVote !== null;
 
+    // Return limited payload for confessions under review
+    if (confession.is_hidden_pending_review) {
+      return NextResponse.json({
+        confession: { id: confession.id, is_hidden_pending_review: true },
+      });
+    }
+
     return NextResponse.json({
       confession: {
         ...confession,
@@ -48,6 +56,50 @@ export async function GET(request, { params }) {
     });
   } catch (err) {
     console.error('GET /api/confessions/[id]:', err.message);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request, { params }) {
+  const auth = await getAuthUser(request);
+  if (auth.error) return auth.error;
+  const { user } = auth;
+
+  try {
+    const { id } = params;
+
+    const { data: confession, error: fetchErr } = await supabaseServer
+      .from('confessions')
+      .select('id, user_id, is_resolved, is_deleted')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (fetchErr || !confession) {
+      return NextResponse.json({ error: 'Confession not found' }, { status: 404 });
+    }
+    if (confession.user_id !== user.id) {
+      return NextResponse.json({ error: 'Not your confession' }, { status: 403 });
+    }
+    if (confession.is_deleted) {
+      return NextResponse.json({ error: 'Already deleted' }, { status: 409 });
+    }
+    if (confession.is_resolved) {
+      return NextResponse.json(
+        { error: 'Cannot delete after resolution. Use the report system if this needs admin review.' },
+        { status: 403 }
+      );
+    }
+
+    const { error: updateErr } = await supabaseServer
+      .from('confessions')
+      .update({ is_deleted: true })
+      .eq('id', id);
+
+    if (updateErr) throw updateErr;
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/confessions/[id]:', err.message);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

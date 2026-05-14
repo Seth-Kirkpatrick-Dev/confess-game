@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getConfession, voteOnConfession } from '@/lib/api';
+import { getConfession, voteOnConfession, deleteConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
 import { TierBadge } from '@/components/TierBadge';
@@ -23,16 +23,35 @@ export default function ConfessionPage() {
   const [confession, setConfession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   const fetchConfession = async () => {
     try {
       const data = await getConfession(id);
-      setConfession(data.confession);
+      // API returns limited payload when under review
+      if (data.confession?.is_hidden_pending_review) {
+        setConfession({ id, is_hidden_pending_review: true });
+      } else {
+        setConfession(data.confession);
+      }
     } catch (err) {
       if (err?.response?.status === 404) setNotFound(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this confession? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await deleteConfession(id);
+      showToast('Confession deleted', 'success');
+      router.push('/');
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to delete', 'error');
+      setDeleting(false);
     }
   };
 
@@ -85,6 +104,19 @@ export default function ConfessionPage() {
     );
   }
 
+  if (confession?.is_hidden_pending_review) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <Link href="/" className="text-textSecondary hover:text-textPrimary text-sm flex items-center gap-1 w-fit">← Feed</Link>
+        <div className="card text-center py-12 space-y-3">
+          <p className="text-3xl">🔍</p>
+          <p className="text-textPrimary font-semibold">This confession is under review</p>
+          <p className="text-textSecondary text-sm">It has been temporarily hidden while our moderation team investigates community reports.</p>
+        </div>
+      </div>
+    );
+  }
+
   const c = confession;
   const hasVoted = c.userVote !== null && c.userVote !== undefined;
   const isResolved = c.is_resolved;
@@ -92,6 +124,7 @@ export default function ConfessionPage() {
   const realPct = totalVotes > 0 ? Math.round(((c.real_votes ?? 0) / totalVotes) * 100) : 50;
   const isCorrect = isResolved && hasVoted ? (c.userVote === 'real') === c.is_true : null;
   const truthLabel = c.is_true === true ? 'Real' : c.is_true === false ? 'Fake' : null;
+  const isAuthor = user?.id === c.user_id;
 
   const resolvedAt = c.resolved_at
     ? new Date(new Date(c.resolved_at).getTime())
@@ -201,8 +234,8 @@ export default function ConfessionPage() {
           </div>
         )}
 
-        {/* Share buttons */}
-        <div className="flex gap-2 pt-1">
+        {/* Share + author actions */}
+        <div className="flex gap-2 pt-1 flex-wrap">
           <button
             onClick={() => handleShare('twitter')}
             className="flex-1 py-2 rounded-lg text-sm border border-border text-textSecondary hover:text-textPrimary hover:border-border/80 hover:bg-surfaceHover transition-colors"
@@ -215,6 +248,24 @@ export default function ConfessionPage() {
           >
             🔗 Copy link
           </button>
+          {isAuthor && (
+            isResolved ? (
+              <span
+                title="Cannot delete after resolution"
+                className="py-2 px-4 rounded-lg text-sm border border-border text-textSecondary/40 cursor-not-allowed select-none"
+              >
+                🗑 Delete
+              </span>
+            ) : (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="py-2 px-4 rounded-lg text-sm border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                {deleting ? 'Deleting…' : '🗑 Delete'}
+              </button>
+            )
+          )}
         </div>
       </div>
     </div>

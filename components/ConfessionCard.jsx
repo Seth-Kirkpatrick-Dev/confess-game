@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { voteOnConfession } from '@/lib/api';
+import { voteOnConfession, deleteConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { TierBadge } from '@/components/TierBadge';
 
@@ -14,9 +14,10 @@ function formatTime(ts) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-export function ConfessionCard({ confession, onVoted, showToast }) {
+export function ConfessionCard({ confession, onVoted, showToast, onDeleted }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [localData, setLocalData] = useState(null);
 
   const data = localData || confession;
@@ -47,6 +48,22 @@ export function ConfessionCard({ confession, onVoted, showToast }) {
       showToast(err?.response?.data?.error || 'Failed to vote', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const isAuthor = user?.id === data.user_id;
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this confession? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await deleteConfession(confession.id);
+      showToast('Confession deleted', 'success');
+      onDeleted?.(confession.id);
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Failed to delete', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -154,13 +171,34 @@ export function ConfessionCard({ confession, onVoted, showToast }) {
             </>
           )}
         </div>
-        <button
-          onClick={handleShare}
-          className="text-textSecondary hover:text-textPrimary text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors"
-          title="Share"
-        >
-          ↗ share
-        </button>
+        <div className="flex items-center gap-1">
+          {isAuthor && (
+            isResolved ? (
+              <span
+                title="Cannot delete after resolution"
+                className="text-textSecondary/40 text-xs px-2 py-1 cursor-not-allowed select-none"
+              >
+                🗑
+              </span>
+            ) : (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-textSecondary hover:text-red-400 text-xs px-2 py-1 rounded hover:bg-red-500/5 transition-colors"
+                title="Delete confession"
+              >
+                {deleting ? '…' : '🗑'}
+              </button>
+            )
+          )}
+          <button
+            onClick={handleShare}
+            className="text-textSecondary hover:text-textPrimary text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors"
+            title="Share"
+          >
+            ↗ share
+          </button>
+        </div>
       </div>
     </div>
   );
