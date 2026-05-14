@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getLeaderboard } from '@/lib/api';
 import { AdPlaceholder } from '@/components/AdPlaceholder';
+import { TierBadge } from '@/components/TierBadge';
 
 function LeaderTable({ title, emoji, data, pointsKey, label }) {
   return (
@@ -26,9 +27,7 @@ function LeaderTable({ title, emoji, data, pointsKey, label }) {
                 <span className="text-textPrimary text-sm font-medium">
                   @{row.username}
                 </span>
-                {row.tier && row.tier !== 'Newbie' && (
-                  <span className="text-xs text-violet-400">{row.tier}</span>
-                )}
+                <TierBadge tier={row.tier} showLabel />
               </div>
               <div className="text-right">
                 <span className="text-violet-400 font-bold text-sm">{row[pointsKey]}</span>

@@ -6,14 +6,7 @@ import Link from 'next/link';
 import { getConfession, voteOnConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
-
-const TIER_COLORS = {
-  Newbie: 'text-textSecondary',
-  Skeptic: 'text-blue-400',
-  'Truth Hunter': 'text-green-400',
-  'Lie Detector': 'text-violet-400',
-  Oracle: 'text-yellow-400',
-};
+import { TierBadge } from '@/components/TierBadge';
 
 function formatDate(ts) {
   return new Date(ts).toLocaleDateString('en-US', {
@@ -128,9 +121,7 @@ export default function ConfessionPage() {
           <Link href={`/u/${c.profiles?.username}`} className="hover:text-textPrimary transition-colors">
             @{c.profiles?.username || 'anonymous'}
           </Link>
-          {c.profiles?.tier && c.profiles.tier !== 'Newbie' && (
-            <span className={TIER_COLORS[c.profiles.tier] || ''}>{c.profiles.tier}</span>
-          )}
+          <TierBadge tier={c.profiles?.tier} showLabel />
           <span>·</span>
           <span>{formatDate(c.created_at)}</span>
           {isResolved ? (

@@ -4,14 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { voteOnConfession } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-
-const TIER_COLORS = {
-  Newbie: 'text-textSecondary',
-  Skeptic: 'text-blue-400',
-  'Truth Hunter': 'text-green-400',
-  'Lie Detector': 'text-violet-400',
-  Oracle: 'text-yellow-400',
-};
+import { TierBadge } from '@/components/TierBadge';
 
 function formatTime(ts) {
   const diff = (Date.now() - new Date(ts).getTime()) / 1000;
@@ -151,11 +144,7 @@ export function ConfessionCard({ confession, onVoted, showToast }) {
           >
             @{data.profiles?.username || 'anonymous'}
           </Link>
-          {data.profiles?.tier && data.profiles.tier !== 'Newbie' && (
-            <span className={`text-xs ${TIER_COLORS[data.profiles.tier] || 'text-textSecondary'}`}>
-              · {data.profiles.tier}
-            </span>
-          )}
+          <TierBadge tier={data.profiles?.tier} />
           <span className="text-border text-xs">·</span>
           <span className="text-textSecondary text-xs">{formatTime(data.created_at)}</span>
           {isResolved && (
