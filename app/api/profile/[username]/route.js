@@ -7,7 +7,7 @@ export async function GET(request, { params }) {
 
     const { data: profile, error } = await supabaseServer
       .from('profiles')
-      .select('id, username, confession_points, detection_points, tier, current_streak, longest_streak, correct_votes, total_resolved_votes, created_at')
+      .select('id, username, confession_points, detection_points, tier, current_streak, longest_streak, correct_votes, total_resolved_votes, created_at, avatar_config, featured_badge_id, featured_badge_icon, total_fooled_voters, consecutive_correct_votes')
       .eq('username', username)
       .eq('is_banned', false)
       .maybeSingle();
@@ -20,6 +20,8 @@ export async function GET(request, { params }) {
       { count: totalConfessions },
       { count: totalVotesCast },
       { data: recentActivity },
+      { data: allAchievements },
+      { data: userAchievements },
     ] = await Promise.all([
       supabaseServer
         .from('confessions')
@@ -40,11 +42,32 @@ export async function GET(request, { params }) {
         .not('is_correct', 'is', null)
         .order('created_at', { ascending: false })
         .limit(10),
+
+      // Full achievement catalog
+      supabaseServer
+        .from('achievements')
+        .select('id, name, description, icon, category, hint_text_when_locked, reward_points')
+        .order('category')
+        .order('name'),
+
+      // User's earned achievements
+      supabaseServer
+        .from('user_achievements')
+        .select('achievement_id, unlocked_at')
+        .eq('user_id', profile.id),
     ]);
 
     const accuracy = profile.total_resolved_votes > 0
       ? Math.round((profile.correct_votes / profile.total_resolved_votes) * 100)
       : null;
+
+    // Merge catalog with earned status
+    const earnedMap = new Map((userAchievements || []).map(ua => [ua.achievement_id, ua.unlocked_at]));
+    const achievements = (allAchievements || []).map(a => ({
+      ...a,
+      unlocked: earnedMap.has(a.id),
+      unlocked_at: earnedMap.get(a.id) || null,
+    }));
 
     return NextResponse.json({
       profile: {
@@ -53,6 +76,7 @@ export async function GET(request, { params }) {
         total_votes_cast: totalVotesCast || 0,
         accuracy_pct: accuracy,
         recent_votes: recentActivity || [],
+        achievements,
       },
     });
   } catch (err) {
