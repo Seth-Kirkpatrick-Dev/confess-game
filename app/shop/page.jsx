@@ -21,18 +21,29 @@ const TIER_SORT = { free: 0, points: 1, premium: 2 };
 
 // CSS values for ring-based border cosmetics
 const RING_CSS = {
-  orange: 'rgba(249,115,22,0.6)',
-  red:    'rgba(239,68,68,0.7)',
-  violet: 'rgba(139,92,246,0.7)',
-  yellow: 'rgba(234,179,8,0.7)',
+  orange:  'rgba(249,115,22,0.6)',
+  red:     'rgba(239,68,68,0.7)',
+  violet:  'rgba(139,92,246,0.7)',
+  yellow:  'rgba(234,179,8,0.7)',
+  cyan:    'rgba(34,211,238,0.7)',
+  sky:     'rgba(14,165,233,0.7)',
+  fuchsia: 'rgba(217,70,239,0.6)',
+  emerald: 'rgba(16,185,129,0.6)',
+  ice:     'rgba(255,255,255,0.5)',
 };
 
 // CSS values for badge_frame background cosmetics
 const BADGE_BG_CSS = {
-  amber:  { background: 'rgba(245,158,11,0.2)',  outline: '1px solid rgba(245,158,11,0.4)' },
-  violet: { background: 'rgba(139,92,246,0.35)', outline: '1px solid rgba(139,92,246,0.3)' },
-  yellow: { background: 'rgba(234,179,8,0.15)',  outline: '2px solid rgba(234,179,8,0.5)' },
-  cyan:   { background: 'rgba(34,211,238,0.1)',  outline: '2px solid rgba(34,211,238,0.5)' },
+  amber:   { background: 'rgba(245,158,11,0.2)',  outline: '1px solid rgba(245,158,11,0.4)' },
+  violet:  { background: 'rgba(139,92,246,0.35)', outline: '1px solid rgba(139,92,246,0.3)' },
+  yellow:  { background: 'rgba(234,179,8,0.15)',  outline: '2px solid rgba(234,179,8,0.5)' },
+  cyan:    { background: 'rgba(34,211,238,0.1)',  outline: '2px solid rgba(34,211,238,0.5)' },
+  emerald: { background: 'rgba(16,185,129,0.15)', outline: '1px solid rgba(16,185,129,0.4)' },
+  red:     { background: 'rgba(239,68,68,0.15)',  outline: '1px solid rgba(239,68,68,0.4)' },
+  sky:     { background: 'rgba(14,165,233,0.15)', outline: '1px solid rgba(14,165,233,0.4)' },
+  fuchsia: { background: 'rgba(217,70,239,0.15)', outline: '1px solid rgba(217,70,239,0.4)' },
+  gold:    { background: 'rgba(234,179,8,0.2)',   outline: '2px solid rgba(234,179,8,0.6)' },
+  blue:    { background: 'rgba(59,130,246,0.15)', outline: '1px solid rgba(59,130,246,0.4)' },
 };
 
 // Inline-style preview — uses config_json so Tailwind purging doesn't affect it
@@ -41,14 +52,19 @@ function CosmeticPreview({ item }) {
 
   if (item.category === 'name_color') {
     let style = {};
-    if (config.color) {
+    if (config.glow) {
+      style = { color: config.color, textShadow: `0 0 8px ${config.glow}` };
+    } else if (config.color) {
       style = { color: config.color };
     } else if (config.gradient) {
       style = {
         background: 'linear-gradient(to right, #f472b6, #a78bfa, #60a5fa)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+      };
+    } else if (config.inferno) {
+      style = {
+        background: 'linear-gradient(to right, #f87171, #fb923c, #facc15)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
       };
     } else if (config.neon) {
       style = { color: '#fde047', textShadow: '0 0 8px rgba(250,204,21,0.7)' };
