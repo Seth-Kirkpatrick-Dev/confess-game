@@ -37,4 +37,8 @@ Thumbs.db
 # Local scripts (seed data, one-offs)
 scripts/
 
+# Supabase CLI temp files
+supabase/.temp/
+supabase/migrations/supabase/
+
 .env*.local
