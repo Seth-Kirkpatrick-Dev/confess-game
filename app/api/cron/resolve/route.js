@@ -13,9 +13,8 @@ function calculateTier(correctVotes, totalResolvedVotes) {
 
 function calculatePosterPoints(totalVotes, wrongVoteRatio, hasPromptBonus) {
   if (totalVotes === 0) return 0;
-  if (totalVotes < 5) return 3; // flat reward, no prompt multiplier on flat
-  const scaled = 20 * (1 - Math.abs(0.5 - wrongVoteRatio) * 2);
-  const points = Math.max(0, Math.floor(scaled));
+  if (totalVotes < 5) return 3;
+  const points = Math.floor(wrongVoteRatio * 20);
   return hasPromptBonus ? Math.floor(points * 1.5) : points;
 }
 
