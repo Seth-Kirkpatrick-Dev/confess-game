@@ -6,6 +6,28 @@ module.exports = {
     './context/**/*.{js,jsx}',
     './lib/**/*.{js,jsx}',
   ],
+  // Cosmetic preview_class values come from the DB at runtime — Tailwind can't scan them.
+  // Every class token used in any cosmetic's preview_class must be listed here.
+  safelist: [
+    // name_color — solid text colours
+    'text-slate-300', 'text-blue-400', 'text-yellow-400', 'text-rose-400',
+    'text-yellow-300', 'text-violet-400', 'text-rose-300', 'text-emerald-400',
+    'text-lime-400', 'text-pink-400', 'text-cyan-400', 'text-amber-400',
+    'text-orange-400', 'text-pink-300', 'text-transparent',
+    // name_color — Aurora gradient
+    'bg-gradient-to-r', 'from-pink-400', 'via-violet-400', 'to-blue-400', 'bg-clip-text',
+    // name_color — glow / drop-shadow arbitrary values
+    'drop-shadow-[0_0_8px_rgba(250,204,21,0.7)]',
+    'drop-shadow-[0_0_6px_rgba(249,168,212,0.6)]',
+    // border — ring sizes
+    'ring-1', 'ring-2',
+    // border — avatar ring colours
+    'ring-violet-500/70', 'ring-red-500/70', 'ring-orange-500/60', 'ring-yellow-500/70',
+    // badge_frame — background fills
+    'bg-violet-900/40', 'bg-yellow-500/15', 'bg-amber-500/20', 'bg-cyan-500/10',
+    // badge_frame — ring colours
+    'ring-violet-500/30', 'ring-yellow-400/50', 'ring-amber-500/40', 'ring-cyan-400/50',
+  ],
   theme: {
     extend: {
       colors: {
