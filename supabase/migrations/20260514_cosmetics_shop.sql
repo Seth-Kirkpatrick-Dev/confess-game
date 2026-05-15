@@ -127,25 +127,34 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ── Catalog seed: 33 cosmetics ────────────────────────────────────────────────
--- Free (10) — each tied to a specific achievement
-INSERT INTO cosmetics (name, description, category, economy_tier, unlock_achievement_id, preview_class, config_json)
-SELECT
-  items.name, items.description, items.category, 'free',
-  (SELECT id FROM achievements WHERE achievements.name = items.achievement_name LIMIT 1),
-  items.preview_class, items.config_json::jsonb
-FROM (VALUES
-  ('First Step',      'Your first step into the world of confessions', 'name_color', 'First Vote',        'text-slate-300',   '{"color":"#cbd5e1"}'),
-  ('Confessor Blue',  'A cool blue for the bold confessor',            'name_color', 'First Confession',  'text-blue-400',    '{"color":"#60a5fa"}'),
-  ('Oracle Gold',     'Reserved for the sharpest minds',               'name_color', 'Oracle',            'text-yellow-400',  '{"color":"#facc15"}'),
-  ('Flame Trail',     'One week without missing a day',                'border',     'Week Streak',       'ring-2 ring-orange-500/60', '{"ring":"orange"}'),
-  ('Eternal Flame',   'A month of unbroken dedication',                'border',     'Month Streak',      'ring-2 ring-red-500/70',    '{"ring":"red"}'),
-  ('Fool''s Badge',   'You fooled them — wear it with pride',           'badge_frame','Perfect Fool',      'bg-amber-500/20 ring-1 ring-amber-500/40', '{"bg":"amber"}'),
-  ('Deceiver''s Mark','The mark of a skilled liar',                     'name_color', 'Deceiver',          'text-rose-400',    '{"color":"#fb7185"}'),
-  ('Shadow Crown',    'For those who deceive at scale',                 'badge_frame','Master Deceiver',   'bg-violet-900/40 ring-1 ring-violet-500/30', '{"bg":"violet"}'),
-  ('Champion Gold',   'First on the weekly leaderboard',               'name_color', 'Weekly Champion',   'text-yellow-300',  '{"color":"#fde047"}'),
-  ('Legend''s Glow',  'First on the monthly leaderboard',              'badge_frame','Monthly Champion',  'bg-yellow-500/15 ring-2 ring-yellow-400/50', '{"bg":"yellow"}')
-) AS items(name, description, category, achievement_name, preview_class, config_json)
+-- Free (10) — insert first, then link achievements via UPDATE.
+-- Note: E'...' escape syntax used to avoid Supabase dashboard splitter bugs
+-- with doubled single-quotes ('').
+INSERT INTO cosmetics (name, description, category, economy_tier, preview_class, config_json)
+VALUES
+  ('First Step',         'Your first step into the world of confessions', 'name_color', 'free', 'text-slate-300',                             '{"color":"#cbd5e1"}'),
+  ('Confessor Blue',     'A cool blue for the bold confessor',            'name_color', 'free', 'text-blue-400',                              '{"color":"#60a5fa"}'),
+  ('Oracle Gold',        'Reserved for the sharpest minds',               'name_color', 'free', 'text-yellow-400',                            '{"color":"#facc15"}'),
+  ('Flame Trail',        'One week without missing a day',                'border',     'free', 'ring-2 ring-orange-500/60',                  '{"ring":"orange"}'),
+  ('Eternal Flame',      'A month of unbroken dedication',                'border',     'free', 'ring-2 ring-red-500/70',                     '{"ring":"red"}'),
+  (E'Fool\'s Badge',     'You fooled them - wear it with pride',          'badge_frame','free', 'bg-amber-500/20 ring-1 ring-amber-500/40',   '{"bg":"amber"}'),
+  (E'Deceiver\'s Mark',  'The mark of a skilled liar',                    'name_color', 'free', 'text-rose-400',                              '{"color":"#fb7185"}'),
+  ('Shadow Crown',       'For those who deceive at scale',                'badge_frame','free', 'bg-violet-900/40 ring-1 ring-violet-500/30', '{"bg":"violet"}'),
+  ('Champion Gold',      'First on the weekly leaderboard',               'name_color', 'free', 'text-yellow-300',                            '{"color":"#fde047"}'),
+  (E'Legend\'s Glow',    'First on the monthly leaderboard',              'badge_frame','free', 'bg-yellow-500/15 ring-2 ring-yellow-400/50', '{"bg":"yellow"}')
 ON CONFLICT (name) DO NOTHING;
+
+-- Link free cosmetics to their unlock achievements
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'First Vote'       LIMIT 1) WHERE name = 'First Step';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'First Confession' LIMIT 1) WHERE name = 'Confessor Blue';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'Oracle'           LIMIT 1) WHERE name = 'Oracle Gold';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'Week Streak'      LIMIT 1) WHERE name = 'Flame Trail';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'Month Streak'     LIMIT 1) WHERE name = 'Eternal Flame';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'Perfect Fool'     LIMIT 1) WHERE name = E'Fool\'s Badge';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'Deceiver'         LIMIT 1) WHERE name = E'Deceiver\'s Mark';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'Master Deceiver'  LIMIT 1) WHERE name = 'Shadow Crown';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'Weekly Champion'  LIMIT 1) WHERE name = 'Champion Gold';
+UPDATE cosmetics SET unlock_achievement_id = (SELECT id FROM achievements WHERE name = 'Monthly Champion' LIMIT 1) WHERE name = E'Legend\'s Glow';
 
 -- Points tier (15)
 INSERT INTO cosmetics (name, description, category, economy_tier, points_cost, preview_class, config_json)
