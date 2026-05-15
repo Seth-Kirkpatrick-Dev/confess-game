@@ -10,7 +10,7 @@ const PERKS = [
   { icon: '∞', title: 'Unlimited confessions', desc: 'Post as many as you want, no daily cap' },
   { icon: '⭐', title: 'Premium badge', desc: 'Stand out with a premium label on your profile' },
   { icon: '🚀', title: 'Early access', desc: 'First to get new features as we ship them' },
-  { icon: '❤️', title: 'Support the game', desc: 'Keep Confess free and ad-supported for others' },
+  { icon: '❤️', title: 'Support the game', desc: 'Help keep Confess free and running for everyone' },
 ];
 
 function PremiumContent() {

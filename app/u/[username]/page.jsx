@@ -448,9 +448,9 @@ export default function ProfilePage() {
           />
           <div className="card space-y-3">
             <p className="text-xs text-textSecondary uppercase tracking-wider font-semibold">Cosmetics</p>
-            <p className="text-xs text-textSecondary">Browse and equip items from the Shop. Owned items will appear here to equip.</p>
+            <p className="text-xs text-textSecondary">Browse and equip cosmetics from the Shop. Your equipped items show on your name and profile everywhere.</p>
             <Link href="/shop" className="btn-ghost text-sm inline-flex">
-              Open Shop →
+              Go to Shop →
             </Link>
           </div>
           <div className="card space-y-3">
