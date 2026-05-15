@@ -84,11 +84,11 @@ export function Navbar() {
                     onClick={() => setDropdownOpen(v => !v)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-white/5 transition-colors text-sm"
                   >
-                    <Avatar username={profile?.username} config={profile?.avatar_config} size={22} />
+                    <Avatar username={profile?.username} config={profile?.avatar_config} size={22} className={profile?.equipped_border_class || ''} />
                     <span className={profile?.equipped_name_color_class || 'text-textSecondary'}>@{profile?.username || 'you'}</span>
                     <TierBadge tier={profile?.tier} />
                     {profile?.featured_badge_icon && (
-                      <span className="text-xs" title="Featured badge">{profile.featured_badge_icon}</span>
+                      <span className={`text-xs rounded px-0.5 ${profile?.equipped_badge_frame_class || ''}`} title="Featured badge">{profile.featured_badge_icon}</span>
                     )}
                     <span className="text-textSecondary text-xs ml-0.5">▾</span>
                   </button>
@@ -169,11 +169,11 @@ export function Navbar() {
             {/* User info */}
             {user && profile && (
               <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-xl bg-surface border border-border">
-                <Avatar username={profile.username} config={profile.avatar_config} size={40} />
+                <Avatar username={profile.username} config={profile.avatar_config} size={40} className={profile?.equipped_border_class || ''} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className={`text-sm font-medium ${profile.equipped_name_color_class || 'text-textPrimary'}`}>@{profile.username}</p>
-                    {profile.featured_badge_icon && <span className="text-sm">{profile.featured_badge_icon}</span>}
+                    {profile.featured_badge_icon && <span className={`text-sm rounded px-0.5 ${profile?.equipped_badge_frame_class || ''}`}>{profile.featured_badge_icon}</span>}
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <TierBadge tier={profile.tier} showLabel />

@@ -7,7 +7,7 @@ export async function GET(request, { params }) {
 
     const { data: profile, error } = await supabaseServer
       .from('profiles')
-      .select('id, username, confession_points, detection_points, tier, current_streak, longest_streak, correct_votes, total_resolved_votes, created_at, avatar_config, featured_badge_id, featured_badge_icon, total_fooled_voters, consecutive_correct_votes')
+      .select('id, username, confession_points, detection_points, tier, current_streak, longest_streak, correct_votes, total_resolved_votes, created_at, avatar_config, featured_badge_id, featured_badge_icon, total_fooled_voters, consecutive_correct_votes, equipped_name_color_class, equipped_border_class, equipped_avatar_emoji, equipped_badge_frame_class')
       .eq('username', username)
       .eq('is_banned', false)
       .maybeSingle();

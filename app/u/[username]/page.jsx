@@ -241,12 +241,12 @@ export default function ProfilePage() {
       {/* Header card */}
       <div className="card space-y-4">
         <div className="flex items-start gap-4">
-          <Avatar username={profile.username} config={profile.avatar_config} size={64} />
+          <Avatar username={profile.username} config={profile.avatar_config} size={64} className={profile.equipped_border_class || ''} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-textPrimary">@{profile.username}</h1>
+              <h1 className={`text-xl font-bold ${profile.equipped_name_color_class || 'text-textPrimary'}`}>@{profile.username}</h1>
               {profile.featured_badge_icon && (
-                <span className="text-lg" title="Featured badge">{profile.featured_badge_icon}</span>
+                <span className={`text-lg rounded px-0.5 ${profile.equipped_badge_frame_class || ''}`} title="Featured badge">{profile.featured_badge_icon}</span>
               )}
               {isOwnProfile && <p className="text-xs text-textSecondary">Your profile</p>}
             </div>
