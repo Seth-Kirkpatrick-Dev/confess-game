@@ -12,7 +12,7 @@ export async function GET(request) {
   }
 
   try {
-    const [catalogResult, ownedResult, equippedResult, profileResult] = await Promise.all([
+    const [catalogResult, ownedResult, equippedResult, profileResult, userAchievementsResult] = await Promise.all([
       supabaseServer
         .from('cosmetics')
         .select('id, name, description, category, economy_tier, points_cost, unlock_achievement_id, preview_class, config_json, achievements(name)')
@@ -32,10 +32,15 @@ export async function GET(request) {
       userId
         ? supabaseServer.from('profiles').select('spendable_points, is_premium').eq('id', userId).single()
         : Promise.resolve({ data: null }),
+
+      userId
+        ? supabaseServer.from('user_achievements').select('achievement_id').eq('user_id', userId)
+        : Promise.resolve({ data: [] }),
     ]);
 
     const ownedSet = new Set((ownedResult.data || []).map(r => r.cosmetic_id));
     const equippedMap = Object.fromEntries((equippedResult.data || []).map(r => [r.slot, r.cosmetic_id]));
+    const earnedAchievementIds = new Set((userAchievementsResult.data || []).map(r => r.achievement_id));
 
     const catalog = (catalogResult.data || []).map(c => ({
       ...c,
@@ -43,6 +48,7 @@ export async function GET(request) {
       achievements: undefined,
       owned: ownedSet.has(c.id),
       equipped: Object.values(equippedMap).includes(c.id),
+      achievement_earned: c.unlock_achievement_id ? earnedAchievementIds.has(c.unlock_achievement_id) : false,
     }));
 
     return NextResponse.json({

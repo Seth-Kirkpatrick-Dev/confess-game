@@ -142,6 +142,17 @@ function CosmeticCard({ item, spendablePoints, isPremium, onBuy, onEquip, equipp
     }
 
     if (item.economy_tier === 'free') {
+      if (item.achievement_earned) {
+        return (
+          <button
+            onClick={handleBuy}
+            disabled={buying}
+            className="text-xs px-3 py-1.5 rounded-lg bg-green-500/15 text-green-400 border border-green-500/20 hover:bg-green-500/25 transition-colors disabled:opacity-50"
+          >
+            {buying ? '…' : 'Claim Free'}
+          </button>
+        );
+      }
       return (
         <div className="text-xs text-textSecondary">
           Unlock: <span className="text-textPrimary">{item.unlock_achievement_name || 'achievement'}</span>
