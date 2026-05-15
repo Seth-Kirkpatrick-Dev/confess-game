@@ -35,7 +35,7 @@ export function UserDisplay({
   const badgeFrameClass = user.equipped_badge_frame_class || '';
 
   const usernameEl = (
-    <span className={`text-xs font-medium transition-colors hover:text-textPrimary ${nameClass}`}>
+    <span className={`text-xs font-medium ${nameClass}`}>
       @{user.username || 'anonymous'}
     </span>
   );
