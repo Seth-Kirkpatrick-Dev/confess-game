@@ -58,11 +58,14 @@ export default function HomePage() {
     setPosting(true);
     try {
       const category = tagPrompt ? todayPrompt.category : null;
-      await postConfession(content.trim(), isTrue, category);
+      const result = await postConfession(content.trim(), isTrue, category);
       setContent('');
       setIsTrue(null);
       setTagPrompt(false);
       showToast('Confession posted! Results in 48h.', 'success');
+      (result?.newAchievements || []).forEach(a => {
+        showToast(`Achievement unlocked: ${a.icon} ${a.name}!`, 'success');
+      });
       fetchFeed(1);
       setPage(1);
     } catch (err) {

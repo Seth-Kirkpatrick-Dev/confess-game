@@ -124,13 +124,14 @@ export async function POST(request) {
 
     if (error) throw error;
 
-    // Non-blocking: streak + achievement check
-    Promise.all([
-      updateStreak(user.id),
-      checkAchievements(user.id),
-    ]).catch(err => console.error('Post-confession side effects failed:', err.message));
+    // Streak is fire-and-forget; achievements are blocking so we can return them
+    updateStreak(user.id).catch(err => console.error('updateStreak failed:', err.message));
+    const newAchievements = await checkAchievements(user.id).catch(err => {
+      console.error('checkAchievements failed:', err.message);
+      return [];
+    });
 
-    return NextResponse.json({ confession: data }, { status: 201 });
+    return NextResponse.json({ confession: data, newAchievements }, { status: 201 });
   } catch (err) {
     console.error('POST /api/confessions:', err.message);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
