@@ -55,6 +55,16 @@ export function AuthProvider({ children }) {
 
   const refreshProfile = () => fetchProfile(user?.id);
 
+  // Apply equipped theme accent as a CSS custom property
+  useEffect(() => {
+    const accent = profile?.equipped_accent_color;
+    if (accent) {
+      document.documentElement.style.setProperty('--theme-accent', accent);
+    } else {
+      document.documentElement.style.removeProperty('--theme-accent');
+    }
+  }, [profile?.equipped_accent_color]);
+
   return (
     <AuthContext.Provider value={{ user, profile, setProfile, loading, login, signup, logout, refreshProfile }}>
       {children}

@@ -9,6 +9,18 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Theme cosmetic: subtle top-glow when --theme-accent is set */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 400px;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(ellipse 80% 100% at 50% -20%, var(--theme-accent, transparent) 0%, transparent 70%);
+    opacity: 0.18;
+  }
+
   * {
     box-sizing: border-box;
   }

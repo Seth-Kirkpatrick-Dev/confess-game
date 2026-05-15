@@ -31,6 +31,8 @@ export function UserDisplay({
 
   const nameClass = user.equipped_name_color_class || 'text-textSecondary';
   const borderClass = user.equipped_border_class || '';
+  const avatarEmoji = user.equipped_avatar_emoji || null;
+  const badgeFrameClass = user.equipped_badge_frame_class || '';
 
   const usernameEl = (
     <span className={`text-xs font-medium transition-colors hover:text-textPrimary ${nameClass}`}>
@@ -41,18 +43,33 @@ export function UserDisplay({
   return (
     <div className={`flex items-center gap-1.5 flex-shrink-0 min-w-0 ${className}`}>
       {showAvatar && (
-        <Avatar
-          username={user.username}
-          config={user.avatar_config}
-          size={avatarSize}
-          className={borderClass}
-        />
+        <span className="relative inline-flex flex-shrink-0">
+          <Avatar
+            username={user.username}
+            config={user.avatar_config}
+            size={avatarSize}
+            className={borderClass}
+          />
+          {avatarEmoji && (
+            <span
+              className="absolute -bottom-1 -right-1 leading-none"
+              style={{ fontSize: avatarSize * 0.5 }}
+            >
+              {avatarEmoji}
+            </span>
+          )}
+        </span>
       )}
       {linkToProfile && user.username ? (
         <Link href={`/u/${user.username}`}>{usernameEl}</Link>
       ) : usernameEl}
       {showBadge && user.featured_badge_icon && (
-        <span className="text-xs flex-shrink-0" title="Featured badge">{user.featured_badge_icon}</span>
+        <span
+          className={`text-xs flex-shrink-0 rounded px-0.5 ${badgeFrameClass}`}
+          title="Featured badge"
+        >
+          {user.featured_badge_icon}
+        </span>
       )}
       {showTier && <TierBadge tier={user.tier} />}
     </div>

@@ -26,7 +26,7 @@ export async function POST(request) {
     // Verify user owns this cosmetic
     const { data: owned, error: ownErr } = await supabaseServer
       .from('user_cosmetics')
-      .select('cosmetic_id, cosmetics(category, preview_class, economy_tier)')
+      .select('cosmetic_id, cosmetics(category, preview_class, config_json, economy_tier)')
       .eq('user_id', user.id)
       .eq('cosmetic_id', cosmetic_id)
       .maybeSingle();
@@ -45,7 +45,7 @@ export async function POST(request) {
       .upsert({ user_id: user.id, slot, cosmetic_id }, { onConflict: 'user_id,slot' });
 
     // Denormalize visible fields to profiles for fast display
-    await updateDenormalized(user.id, slot, cosmetic.preview_class);
+    await updateDenormalized(user.id, slot, cosmetic.preview_class, cosmetic.config_json);
 
     return NextResponse.json({ success: true, preview_class: cosmetic.preview_class });
   } catch (err) {
@@ -54,18 +54,29 @@ export async function POST(request) {
   }
 }
 
-async function updateDenormalized(userId, slot, previewClass) {
-  const col = slot === 'name_color' ? 'equipped_name_color_class'
-            : slot === 'border'     ? 'equipped_border_class'
-            : null;
-  if (!col) return; // other slots don't have denormalized columns yet
-  await supabaseServer.from('profiles').update({ [col]: previewClass }).eq('id', userId);
+const THEME_ACCENTS = { midnight: '#1e3a5f', cyberpunk: '#7c2d00' };
+
+async function updateDenormalized(userId, slot, previewClass, configJson) {
+  const cfg = configJson || {};
+  const update =
+    slot === 'name_color'       ? { equipped_name_color_class: previewClass }
+    : slot === 'border'         ? { equipped_border_class: previewClass }
+    : slot === 'avatar_accessory' ? { equipped_avatar_emoji: cfg.emoji || null }
+    : slot === 'badge_frame'    ? { equipped_badge_frame_class: previewClass }
+    : slot === 'theme'          ? { equipped_accent_color: cfg.accent || THEME_ACCENTS[cfg.theme] || null }
+    : null;
+  if (!update) return;
+  await supabaseServer.from('profiles').update(update).eq('id', userId);
 }
 
 async function clearDenormalized(userId, slot) {
-  const col = slot === 'name_color' ? 'equipped_name_color_class'
-            : slot === 'border'     ? 'equipped_border_class'
-            : null;
-  if (!col) return;
-  await supabaseServer.from('profiles').update({ [col]: null }).eq('id', userId);
+  const update =
+    slot === 'name_color'         ? { equipped_name_color_class: null }
+    : slot === 'border'           ? { equipped_border_class: null }
+    : slot === 'avatar_accessory' ? { equipped_avatar_emoji: null }
+    : slot === 'badge_frame'      ? { equipped_badge_frame_class: null }
+    : slot === 'theme'            ? { equipped_accent_color: null }
+    : null;
+  if (!update) return;
+  await supabaseServer.from('profiles').update(update).eq('id', userId);
 }
