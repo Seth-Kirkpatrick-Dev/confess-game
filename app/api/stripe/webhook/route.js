@@ -32,5 +32,16 @@ export async function POST(request) {
     }
   }
 
+  if (event.type === 'invoice.payment_failed') {
+    const invoice = event.data.object;
+    if (invoice.billing_reason === 'subscription_cycle') {
+      const { data: profile } = await supabaseServer
+        .from('profiles').select('id').eq('stripe_customer_id', invoice.customer).single();
+      if (profile) {
+        await supabaseServer.from('profiles').update({ is_premium: false }).eq('id', profile.id);
+      }
+    }
+  }
+
   return NextResponse.json({ received: true });
 }

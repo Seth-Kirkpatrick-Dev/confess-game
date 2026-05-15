@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { createCheckoutSession } from '@/lib/api';
+import { createCheckoutSession, createPortalSession } from '@/lib/api';
 
 const PERKS = [
   { icon: '∞', title: 'Unlimited confessions', desc: 'Post as many as you want, no daily cap' },
@@ -17,6 +17,7 @@ function PremiumContent() {
   const { user, profile, refreshProfile } = useAuth();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [error, setError] = useState('');
 
   const success = searchParams.get('success') === 'true';
@@ -25,6 +26,19 @@ function PremiumContent() {
   useEffect(() => {
     if (success) refreshProfile();
   }, [success]);
+
+  const handleManage = async () => {
+    setPortalLoading(true);
+    setError('');
+    try {
+      const { url } = await createPortalSession();
+      window.location.href = url;
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Failed to open billing portal. Try again.');
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   const handleUpgrade = async () => {
     if (!user) return;
@@ -84,9 +98,18 @@ function PremiumContent() {
       )}
 
       {profile?.is_premium ? (
-        <div className="card border-yellow-500/30 bg-yellow-500/10 text-center">
-          <p className="text-yellow-400 font-semibold">⭐ You're already Premium!</p>
-          <p className="text-textSecondary text-sm mt-1">Enjoy your unlimited confessions.</p>
+        <div className="space-y-3">
+          <div className="card border-yellow-500/30 bg-yellow-500/10 text-center">
+            <p className="text-yellow-400 font-semibold">⭐ You're already Premium!</p>
+            <p className="text-textSecondary text-sm mt-1">Enjoy your unlimited confessions.</p>
+          </div>
+          <button
+            onClick={handleManage}
+            disabled={portalLoading}
+            className="btn-ghost w-full text-sm py-2"
+          >
+            {portalLoading ? 'Opening portal...' : 'Manage subscription'}
+          </button>
         </div>
       ) : user ? (
         <button
