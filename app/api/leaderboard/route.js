@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 
+const PROFILE_FIELDS = 'id, username, tier, avatar_config, featured_badge_icon, equipped_name_color_class, equipped_border_class, equipped_avatar_emoji, equipped_badge_frame_class, equipped_accent_color';
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -11,14 +13,14 @@ export async function GET(request) {
       const [{ data: weeklyHistory }, { data: monthlyHistory }] = await Promise.all([
         supabaseServer
           .from('leaderboard_history')
-          .select('rank, points, period_start, period_end, profiles(id, username, tier, avatar_config, featured_badge_icon)')
+          .select(`rank, points, period_start, period_end, profiles(${PROFILE_FIELDS})`)
           .eq('period_type', 'weekly')
           .order('period_start', { ascending: false })
           .order('rank', { ascending: true })
           .limit(10),
         supabaseServer
           .from('leaderboard_history')
-          .select('rank, points, period_start, period_end, profiles(id, username, tier, avatar_config, featured_badge_icon)')
+          .select(`rank, points, period_start, period_end, profiles(${PROFILE_FIELDS})`)
           .eq('period_type', 'monthly')
           .order('period_start', { ascending: false })
           .order('rank', { ascending: true })
@@ -31,7 +33,7 @@ export async function GET(request) {
       const pointsCol = period === 'weekly' ? 'weekly_points' : 'monthly_points';
       const { data, error } = await supabaseServer
         .from('profiles')
-        .select(`id, username, tier, avatar_config, featured_badge_icon, ${pointsCol}`)
+        .select(`${PROFILE_FIELDS}, ${pointsCol}`)
         .eq('is_banned', false)
         .gt(pointsCol, 0)
         .order(pointsCol, { ascending: false })
@@ -45,13 +47,13 @@ export async function GET(request) {
     const [{ data: confessors, error: e1 }, { data: detectors, error: e2 }] = await Promise.all([
       supabaseServer
         .from('profiles')
-        .select('id, username, confession_points, detection_points, tier, avatar_config, featured_badge_icon')
+        .select(`${PROFILE_FIELDS}, confession_points, detection_points`)
         .eq('is_banned', false)
         .order('confession_points', { ascending: false })
         .limit(10),
       supabaseServer
         .from('profiles')
-        .select('id, username, confession_points, detection_points, tier, avatar_config, featured_badge_icon')
+        .select(`${PROFILE_FIELDS}, confession_points, detection_points`)
         .eq('is_banned', false)
         .order('detection_points', { ascending: false })
         .limit(10),

@@ -14,7 +14,7 @@ export async function GET(request) {
 
     const { data, error, count } = await supabaseServer
       .from('confessions')
-      .select('*, profiles(username, tier, avatar_config, featured_badge_icon, equipped_name_color_class, equipped_border_class)', { count: 'exact' })
+      .select('*, profiles(username, tier, avatar_config, featured_badge_icon, equipped_name_color_class, equipped_border_class, equipped_avatar_emoji, equipped_badge_frame_class, equipped_accent_color)', { count: 'exact' })
       .eq('is_deleted', false)
       .eq('is_hidden_pending_review', false)
       .order('created_at', { ascending: false })

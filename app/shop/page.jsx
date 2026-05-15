@@ -220,7 +220,7 @@ function CosmeticCard({ item, spendablePoints, isPremium, onBuy, onEquip, equipp
 }
 
 export default function ShopPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { showToast, ToastContainer } = useToast();
   const [catalog, setCatalog] = useState([]);
   const [equippedMap, setEquippedMap] = useState({});
@@ -273,10 +273,12 @@ export default function ShopPage() {
         await equipCosmetic(item.category, item.id);
         setEquippedMap(prev => ({ ...prev, [item.category]: item.id }));
         showToast(`${item.name} equipped!`, 'success');
+        refreshProfile(); // sync theme/avatar/border into AuthContext immediately
       } else {
         await unequipCosmetic(item.category);
         setEquippedMap(prev => { const next = { ...prev }; delete next[item.category]; return next; });
         showToast(`${item.name} unequipped`, 'success');
+        refreshProfile();
       }
     } catch {
       showToast('Failed to update equipped item', 'error');
